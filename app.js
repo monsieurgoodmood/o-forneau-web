@@ -235,8 +235,10 @@ function filtered(){let list=R.slice();
   else if(S.sort==="name")list=list.slice().sort((a,b)=>a.title.localeCompare(b.title,"fr"));
   else if(S.sort==="kcal")list=list.slice().sort((a,b)=>(a.macros?a.macros.kcal:1e9)-(b.macros?b.macros.kcal:1e9));
   else if(S.sort==="quick")list=list.slice().sort((a,b)=>a.active-b.active);
+  else if(S.sort==="rated")list=list.slice().sort((a,b)=>(statOf(b).avg-statOf(a).avg)||(statOf(b).n-statOf(a).n)||a.title.localeCompare(b.title,"fr"));
   return list;}
-const SORTS=[{k:"default",l:"Pertinence",i:"i-spark"},{k:"time",l:"Temps total (court → long)",i:"i-clock"},
+const SORTS=[{k:"default",l:"Pertinence",i:"i-spark"},{k:"rated",l:"Les mieux notées",i:"i-heart"},
+  {k:"time",l:"Temps total (court → long)",i:"i-clock"},
   {k:"quick",l:"Préparation la plus rapide",i:"i-timer"},{k:"name",l:"Ordre alphabétique (A → Z)",i:"i-sliders"},
   {k:"kcal",l:"Les plus légères (kcal)",i:"i-flame"}];
 
@@ -535,7 +537,7 @@ function renderDetail(){const r=R[curId],k=curServ/r.serv,cov=coverage(r),P=[...
       <span class="nm">${esc(name)}${o.note?` <small>(${esc(o.note)})</small>`:""}</span>
       ${!o.staple?`<span class="have ${have?'ok':'no'}">${have?ic("i-check",'ic',2.2)+"J'ai":"À acheter"}</span>`:""}</div>`;}).join("");
   const subsHTML=r.subs.map(s=>`<div style="padding:9px 0;font-size:14.5px;border-bottom:1px solid var(--lineSoft)">${ic("i-swap",'ic',1.8)} <b>${esc(s[0])}</b> <span style="color:var(--gold)">→</span> <span style="color:var(--muted)">${esc(s[1])}</span></div>`).join("");
-  const stepsHTML=r.steps.map(s=>`<div class="step"><span class="no"></span><div class="tx"><div>${esc(s[0])}</div>${s[1]?`<span class="dur">${ic("i-clock",'ic')}<span class="tnum">${Math.round(s[1]/60)} min</span></span>`:""}</div></div>`).join("");
+  const stepsHTML=r.steps.map((s,i)=>`<div class="step"><span class="no">${i+1}</span><div class="tx"><div>${esc(s[0])}</div>${s[1]?`<span class="dur">${ic("i-clock",'ic')}<span class="tnum">${Math.round(s[1]/60)} min</span></span>`:""}</div></div>`).join("");
   const prodInner=`<div class="pic">${ic(prod.i,'ic',1.8)}</div>
       <div class="tx"><div class="k">Ustensile Forneau</div><div class="n">${esc(prod.n)}</div><div class="d">${esc(prod.d)}</div></div>
       ${prod.have?`<span class="cta">Voir le produit${ic("i-ext",'ic')}</span>`:`<span class="cta">Bientôt au catalogue</span>`}`;
@@ -745,7 +747,7 @@ function loadCloud(){const st=S.profile&&S.profile.app_state;if(!st||typeof st!=
   try{localStorage.setItem("mf_favs",JSON.stringify([...S.favs]));localStorage.setItem("mf_pantry",JSON.stringify([...S.pantry]));localStorage.setItem("mf_cart",JSON.stringify([...S.cart]));}catch{}
   render();updateBadges();}
 async function afterAuth(){try{const {data}=await SB.auth.getUser();S.user=data&&data.user||null;
-  if(S.user){const r=await SB.from("user_profiles").select("*").eq("id",S.user.id).maybeSingle();S.profile=r.data||null;loadCloud();}
+  if(S.user){const r=await SB.from("user_profiles").select("*").eq("id",S.user.id).maybeSingle();S.profile=r.data||null;loadCloud();loadMyRatings();}
   updateAcct();}catch(e){}}
 async function doSignup(){const email=$("#auEmail").value.trim(),pass=$("#auPass").value,prenom=$("#auPrenom").value.trim();
   authErr("");if(!email||!pass)return authErr("E-mail et mot de passe requis.");if(!prenom)return authErr("Votre prénom, s'il vous plaît.");if(pass.length<6)return authErr("Mot de passe : 6 caractères minimum.");
@@ -764,6 +766,14 @@ async function saveProfileEdits(){const patch={prenom:$("#apPrenom").value.trim(
 async function deleteAccount(){if(!confirm("Supprimer votre compte et toutes vos données ? Cette action est définitive."))return;
   try{await SB.from("user_profiles").delete().eq("id",S.user.id);}catch(e){}
   await SB.auth.signOut();S.user=null;S.profile=null;updateAcct();closeSheets();toast("Compte supprimé.");}
+
+/* ---------- AVIS : agrégats publics (note moyenne, nb de notes/commentaires) ---------- */
+const STATS={},MYRATE={};
+function statOf(r){const s=STATS[r.slug];return s?{avg:+s.avg_rating||0,n:s.rating_count||0,c:s.comment_count||0}:{avg:0,n:0,c:0};}
+function loadStats(){if(!SB)return;SB.from("recipe_stats").select("recipe_slug,avg_rating,rating_count,comment_count").then(({data})=>{
+  if(data){data.forEach(s=>STATS[s.recipe_slug]=s);if(S.tab==="catalogue"||S.tab==="home")render();}},()=>{});}
+function loadMyRatings(){if(!SB||!S.user)return;SB.from("recipe_ratings").select("recipe_slug,stars").eq("user_id",S.user.id).then(({data})=>{
+  if(data)data.forEach(x=>MYRATE[x.recipe_slug]=x.stars);},()=>{});}
 if(SB){SB.auth.getSession().then(({data})=>{if(data&&data.session)afterAuth();});}
 
-render();updateAcct();
+render();updateAcct();loadStats();
