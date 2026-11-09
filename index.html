@@ -493,6 +493,45 @@ img{max-width:100%}
 }
 @media (min-width:1280px){ .detailwrap{width:700px} }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* ---- Avis communauté ---- */
+.avis h2{margin-bottom:12px}
+.ratebox{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.ratesum{display:flex;gap:12px;align-items:center}
+.ratesum .big{font-family:var(--fD);font-size:38px;font-weight:700;color:var(--greenDeep);line-height:1}
+.stars{display:inline-flex;gap:2px;font-size:16px;line-height:1;color:#D8D0BE}
+.stars .st.on{color:var(--gold)}
+.stars.ed{font-size:27px;gap:5px}
+.stars.ed .st{background:none;border:0;padding:0;cursor:pointer;color:#D8D0BE;transition:transform .08s}
+.stars.ed .st.on{color:var(--gold)}
+.stars.ed .st:active{transform:scale(.86)}
+.ratesum .cnt{font-size:12.5px;color:var(--muted);margin-top:4px}
+.critbars{display:flex;flex-direction:column;gap:6px;min-width:168px;flex:1}
+.cb{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.cb span{width:76px;flex:0 0 auto}
+.cb .bar{flex:1;height:6px;border-radius:999px;background:var(--surface);overflow:hidden}
+.cb .bar i{display:block;height:100%;background:var(--goldGrad);border-radius:999px}
+.cb b{width:26px;text-align:right;color:var(--greenDeep)}
+.gallery{display:flex;gap:10px;overflow-x:auto;padding:14px 2px 4px;-webkit-overflow-scrolling:touch}
+.gph{position:relative;flex:0 0 auto}
+.gph img{width:120px;height:120px;object-fit:cover;border-radius:14px;border:1px solid var(--line);display:block;cursor:pointer}
+.gph .who{position:absolute;left:7px;bottom:7px;color:#fff;font-size:11px;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,.6);pointer-events:none}
+.gph .gact{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;border:0;font-size:12px;cursor:pointer;display:grid;place-items:center}
+.reviewform{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:11px}
+.rfhead{font-family:var(--fD);font-weight:600;color:var(--greenDeep);font-size:15px}
+.critrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.critrow .clab{font-size:14px;color:var(--ink)}
+.reviewform textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;font-size:14px;resize:vertical;background:var(--paper);color:var(--ink)}
+.photobtn{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;padding:9px 13px;border:1px dashed var(--lineGold);border-radius:999px;color:var(--gold);font-size:13px;font-weight:600;cursor:pointer}
+.photobtn svg{width:16px;height:16px}
+.avislist{margin-top:16px;display:flex;flex-direction:column;gap:12px}
+.noavis{font-size:14px;color:var(--muted);text-align:center;padding:10px 0}
+.cmt{border:1px solid var(--line);border-radius:14px;padding:11px 14px;background:var(--card)}
+.cmt .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.cmt .au{font-weight:600;color:var(--greenDeep);font-size:13.5px}
+.cmt .dt{font-size:11.5px;color:var(--faint)}
+.cmt .bd{font-size:14px;color:var(--ink);line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.cmt .acts{margin-top:7px}
+.cmt .acts button{background:none;border:0;color:var(--muted);font-size:12px;cursor:pointer;padding:0}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
