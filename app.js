@@ -12,13 +12,13 @@ const ALLERG = { gluten:{l:"Gluten"}, lactose:{l:"Lactose"}, fruits_coque:{l:"Fr
 
 const SHOP="https://forneau.com/products/";
 const PRODUCTS = {
-  poele:{n:"Poêle titane Forneau",d:"Titane pur, sans PFAS, garantie à vie",have:1,i:"i-pan",h:"poele-titane-forneau"},
-  sauteuse:{n:"Sauteuse 24 cm titane",d:"Sautés et plats mijotés",have:1,i:"i-pan",h:"la-sauteuse-forneau-24-cm-titane-pur"},
-  wok:{n:"Wok 24 cm titane",d:"Sautés vifs, woks",have:1,i:"i-pan",h:"wok-titane-forneau-24cm"},
-  casserole:{n:"Casserole 18 cm titane",d:"Currys, soupes, céréales",have:1,i:"i-pot",h:"casserole-titane-18-cm-sans-pfas"},
-  marmite:{n:"Marmite 24 cm titane",d:"Grands volumes, pâtes, bouillons",have:1,i:"i-pot",h:"marmite-titane-24-cm-sans-pfas"},
-  crepiere:{n:"Crêpière titane",d:"Pancakes, crêpes, galettes",have:1,i:"i-pan",h:"crepiere-titane-forneau"},
-  planche:{n:"Planche titane Forneau",d:"Découpe hygiénique, inrayable",have:1,i:"i-board",h:"planche-titane-forneau"},
+  poele:{n:"Poêle titane Forneau",d:"Titane pur, sans PFAS, garantie à vie",have:1,i:"i-pan",h:"poele-titane-forneau",img:"https://cdn.shopify.com/s/files/1/1004/2310/6741/files/galerie-poele-v8-01-bestseller.jpg?v=1794074954&width=240"},
+  sauteuse:{n:"Sauteuse 24 cm titane",d:"Sautés et plats mijotés",have:1,i:"i-pan",h:"la-sauteuse-forneau-24-cm-titane-pur",img:"https://cdn.shopify.com/s/files/1/1004/2310/6741/files/galerie-wok-S01.jpg?v=1794011617&width=240"},
+  wok:{n:"Wok 24 cm titane",d:"Sautés vifs, woks",have:1,i:"i-pan",h:"wok-titane-forneau-24cm",img:"https://cdn.shopify.com/s/files/1/1004/2310/6741/files/galerie-wok-W01.jpg?v=1794010173&width=240"},
+  casserole:{n:"Casserole 18 cm titane",d:"Currys, soupes, céréales",have:1,i:"i-pot",h:"casserole-titane-18-cm-sans-pfas",img:"https://cdn.shopify.com/s/files/1/1004/2310/6741/files/galerie-wok-K01.jpg?v=1794014261&width=240"},
+  marmite:{n:"Marmite 24 cm titane",d:"Grands volumes, pâtes, bouillons",have:1,i:"i-pot",h:"marmite-titane-24-cm-sans-pfas",img:"https://cdn.shopify.com/s/files/1/1004/2310/6741/files/galerie-wok-M01.jpg?v=1794014237&width=240"},
+  crepiere:{n:"Crêpière titane",d:"Pancakes, crêpes, galettes",have:1,i:"i-pan",h:"crepiere-titane-forneau",img:"https://cdn.shopify.com/s/files/1/1004/2310/6741/files/galerie-wok-C01.jpg?v=1794013682&width=240"},
+  planche:{n:"Planche titane Forneau",d:"Découpe hygiénique, inrayable",have:1,i:"i-board",h:"planche-titane-forneau",img:"https://cdn.shopify.com/s/files/1/1004/2310/6741/files/galerie-wok-P01f.jpg?v=1794013632&width=240"},
   plat_four:{n:"Plat à four titane",d:"Crumbles, gratins, cookies — à venir",have:0,i:"i-oven"},
   moule:{n:"Moule à cake titane",d:"Cakes et gâteaux — à venir",have:0,i:"i-oven"},
   bol:{n:"Bol titane",d:"Porridge, service — à venir",have:0,i:"i-bowl"},
@@ -543,7 +543,7 @@ function renderDetail(){const r=R[curId],k=curServ/r.serv,cov=coverage(r),P=[...
       ${!o.staple?`<span class="have ${have?'ok':'no'}">${have?ic("i-check",'ic',2.2)+"J'ai":"À acheter"}</span>`:""}</div>`;}).join("");
   const subsHTML=r.subs.map(s=>`<div style="padding:9px 0;font-size:14.5px;border-bottom:1px solid var(--lineSoft)">${ic("i-swap",'ic',1.8)} <b>${esc(s[0])}</b> <span style="color:var(--gold)">→</span> <span style="color:var(--muted)">${esc(s[1])}</span></div>`).join("");
   const stepsHTML=r.steps.map((s,i)=>`<div class="step"><span class="no">${i+1}</span><div class="tx"><div>${esc(s[0])}</div>${s[1]?`<span class="dur">${ic("i-clock",'ic')}<span class="tnum">${Math.round(s[1]/60)} min</span></span>`:""}</div></div>`).join("");
-  const prodInner=`<div class="pic">${ic(prod.i,'ic',1.8)}</div>
+  const prodInner=`<div class="pic">${prod.img?`<img src="${prod.img}" alt="${esc(prod.n)}" loading="lazy" onerror="this.remove()"/>`:ic(prod.i,'ic',1.8)}</div>
       <div class="tx"><div class="k">Ustensile Forneau</div><div class="n">${esc(prod.n)}</div><div class="d">${esc(prod.d)}</div></div>
       ${prod.have?`<span class="cta">Voir le produit${ic("i-ext",'ic')}</span>`:`<span class="cta">Bientôt au catalogue</span>`}`;
   const prodHTML=prod.have&&prod.h?`<a class="product" href="${SHOP}${prod.h}" target="_blank" rel="noopener">${prodInner}</a>`:`<div class="product gap">${prodInner}</div>`;
