@@ -525,7 +525,8 @@ function tagHTML(name){return `<span class="tag">${esc(name)}<button data-untag=
 
 /* ---------- détail ---------- */
 let curId=null,curServ=4,macroMode="personne";
-function openDetail(id){const r=R[id];curId=id;curServ=S.foyer.mode==="groupe"?foyerCount():r.serv;macroMode="personne";$("#detailTitle").textContent=r.title;renderDetail();
+function openDetail(id){const r=R[id];curId=id;curServ=S.foyer.mode==="groupe"?foyerCount():r.serv;macroMode="personne";draftRate={taste:0,ease:0,visual:0};draftPhoto=null;$("#detailTitle").textContent=r.title;renderDetail();
+  if(SB){loadComments(r.slug);loadPhotos(r.slug);}
   $("#detail").classList.add("on");document.body.style.overflow="hidden";
   $("#detailFav").setAttribute("aria-pressed",S.favs.has(id));$("#detailFav").querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.3:1.6);
   history.pushState({d:1},"");}
@@ -568,12 +569,14 @@ function renderDetail(){const r=R[curId],k=curServ/r.serv,cov=coverage(r),P=[...
     ${r.subs&&r.subs.length?`<div class="section"><h2>Substitutions</h2>${subsHTML}
       <p style="font-size:12.5px;color:var(--faint);margin-top:8px">Proposées dans la même famille d'ingrédients, à profil nutritionnel proche.</p></div>`:""}
     <div class="section"><h2>Préparation</h2><div class="steps">${stepsHTML}</div></div>
+    ${SB?avisHTML(r):""}
     <div class="cta-sticky"><button class="btn ghost" id="toCart2" style="flex:0 0 56px" aria-label="Courses">${ic("i-cart")}</button>
       <button class="btn" id="startCook">${ic("i-play")}Mode cuisine</button></div>`;
   $("#servMinus").onclick=()=>{if(curServ>1){curServ--;renderDetail();}};
   $("#servPlus").onclick=()=>{if(curServ<12){curServ++;renderDetail();}};
   $("#startCook").onclick=()=>startCook(curId);
   $("#addCart").onclick=$("#toCart2").onclick=()=>{if(!S.favs.has(r.id)){S.favs.add(r.id);LS.set("favs",[...S.favs]);}toast("Ajouté à vos favoris et à vos courses");updateBadges();};
+  if(SB){renderComments(r.slug);renderPhotos(r.slug);}
 }
 
 /* ---------- mode cuisine ---------- */
@@ -626,7 +629,7 @@ function render(){$$(".navitem,.bottomnav button").forEach(b=>b.setAttribute("ar
 
 /* ---------- événements ---------- */
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-open],[data-fav],[data-aopt],[data-tab],[data-go],[data-obj],[data-repas],[data-goal],[data-diet],[data-psex],[data-addtag],[data-untag],[data-course],[data-fmode],[data-fcount],[data-ffam],[data-fnutri],[data-msex],[data-macro],[data-sort],[data-close],[data-auth],#acctBtn,#openFilters,#openSort,#scrim,#aNext,#aPrev,#aSkip,#aBack,#catToggle,#catClear,#catClear2,#progGen,#progSave,#detailBack,#detailFav,#qgo");
+  const t=e.target.closest("[data-open],[data-fav],[data-aopt],[data-tab],[data-go],[data-obj],[data-repas],[data-goal],[data-diet],[data-psex],[data-addtag],[data-untag],[data-course],[data-fmode],[data-fcount],[data-ffam],[data-fnutri],[data-msex],[data-macro],[data-sort],[data-close],[data-auth],[data-star],[data-report],[data-cdel],[data-repphoto],[data-delphoto],[data-authprompt],[data-photofull],#revSubmit,#acctBtn,#openFilters,#openSort,#scrim,#aNext,#aPrev,#aSkip,#aBack,#catToggle,#catClear,#catClear2,#progGen,#progSave,#detailBack,#detailFav,#qgo");
   if(!t)return;
   if(t.dataset.fav!==undefined){const id=+t.dataset.fav;S.favs.has(id)?S.favs.delete(id):S.favs.add(id);LS.set("favs",[...S.favs]);
     t.setAttribute("aria-pressed",S.favs.has(id));t.querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.2:1.6);updateBadges();e.stopPropagation();return;}
@@ -672,8 +675,17 @@ document.addEventListener("click",e=>{
   if(t.id==="detailBack"){history.back();return;}
   if(t.id==="detailFav"){const id=curId;S.favs.has(id)?S.favs.delete(id):S.favs.add(id);LS.set("favs",[...S.favs]);
     t.setAttribute("aria-pressed",S.favs.has(id));t.querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.3:1.6);updateBadges();return;}
+  if(t.dataset.star!==undefined){const[crit,n]=t.dataset.star.split(":");draftRate[crit]=+n;const grp=t.closest(".stars.ed");if(grp)grp.outerHTML=starsEdit(crit,+n);return;}
+  if(t.id==="revSubmit"){submitReview();return;}
+  if(t.dataset.report!==undefined){reportComment(t.dataset.report);return;}
+  if(t.dataset.cdel!==undefined){delComment(t.dataset.cdel);return;}
+  if(t.dataset.repphoto!==undefined){reportPhoto(t.dataset.repphoto);return;}
+  if(t.dataset.delphoto!==undefined){delPhoto(t.dataset.delphoto);return;}
+  if(t.dataset.authprompt!==undefined){openAuth();return;}
+  if(t.dataset.photofull!==undefined){window.open(t.dataset.photofull,"_blank","noopener");return;}
 });
-document.addEventListener("change",e=>{if(editProg(e.target))return;if(editMember(e.target))return;const c=e.target.closest("[data-check]");if(!c)return;
+document.addEventListener("change",e=>{if(e.target.id==="revPhoto"){const f=e.target.files&&e.target.files[0];if(f){draftPhoto=f;const n=$("#revPhotoName");if(n)n.textContent=f.name.length>26?f.name.slice(0,24)+"…":f.name;}return;}
+  if(editProg(e.target))return;if(editMember(e.target))return;const c=e.target.closest("[data-check]");if(!c)return;
   const g=c.dataset.check,v=c.value;
   if(g==="diet")c.checked?S.diets.add(v):S.diets.delete(v);
   else if(g==="appl")c.checked?S.appl.add(v):S.appl.delete(v);
@@ -774,6 +786,73 @@ function loadStats(){if(!SB)return;SB.from("recipe_stats").select("recipe_slug,a
   if(data){data.forEach(s=>STATS[s.recipe_slug]=s);if(S.tab==="catalogue"||S.tab==="home")render();}},()=>{});}
 function loadMyRatings(){if(!SB||!S.user)return;SB.from("recipe_ratings").select("recipe_slug,stars").eq("user_id",S.user.id).then(({data})=>{
   if(data)data.forEach(x=>MYRATE[x.recipe_slug]=x.stars);},()=>{});}
+
+/* ---------- AVIS : UI (notes multi-critères + commentaires + photos, modérés) ---------- */
+const CRITS=[["taste","Goût"],["ease","Faisabilité"],["visual","Visuel"]];
+const CMTS={},PHOTOS={};
+let draftRate={taste:0,ease:0,visual:0},draftPhoto=null;
+function timeago(iso){const d=new Date(iso),s=(Date.now()-d.getTime())/1000;
+  if(s<3600)return "il y a "+Math.max(1,Math.floor(s/60))+" min";
+  if(s<86400)return "il y a "+Math.floor(s/3600)+" h";
+  if(s<604800)return "il y a "+Math.floor(s/86400)+" j";
+  return d.toLocaleDateString("fr-FR",{day:"numeric",month:"short"});}
+function starsRO(v,sz){v=+v||0;let h=`<span class="stars ro"${sz?` style="font-size:${sz}px"`:""}>`;for(let i=1;i<=5;i++)h+=`<span class="st ${i<=Math.round(v)?'on':''}">★</span>`;return h+"</span>";}
+function starsEdit(crit,val){let h=`<span class="stars ed">`;for(let i=1;i<=5;i++)h+=`<button type="button" class="st ${i<=(val||0)?'on':''}" data-star="${crit}:${i}" aria-label="${i} sur 5">★</button>`;return h+"</span>";}
+function photoUrl(path){try{return SB.storage.from("dish-photos").getPublicUrl(path).data.publicUrl;}catch(e){return "";}}
+function avisHTML(r){const slug=r.slug,st=statOf(r),ss=STATS[slug]||{};
+  return `<div class="section avis"><h2>Avis de la communauté</h2>
+    <div class="ratebox">
+      <div class="ratesum"><div class="big tnum">${st.n?st.avg.toFixed(1):"—"}</div>
+        <div>${starsRO(st.avg,17)}<div class="cnt">${st.n?(st.n+" avis"):"Pas encore d'avis"}${st.c?" · "+st.c+" comm.":""}</div></div></div>
+      ${st.n?`<div class="critbars">${CRITS.map(([k,l])=>{const a=+ss["avg_"+k]||0;return `<div class="cb"><span>${l}</span><div class="bar"><i style="width:${a/5*100}%"></i></div><b class="tnum">${a?a.toFixed(1):"–"}</b></div>`;}).join("")}</div>`:""}
+    </div>
+    <div class="gallery" id="avisGallery" hidden></div>
+    ${S.user?`<div class="reviewform"><div class="rfhead">Votre avis</div>
+      ${CRITS.map(([k,l])=>`<div class="critrow"><span class="clab">${l}</span>${starsEdit(k,draftRate[k])}</div>`).join("")}
+      <textarea id="revText" rows="3" maxlength="1000" placeholder="Une astuce, une variante, ce que vous en avez pensé…"></textarea>
+      <label class="photobtn">${ic("i-plus")}<span id="revPhotoName">Ajouter une photo de votre plat</span><input type="file" accept="image/*" id="revPhoto" hidden></label>
+      <button class="btn" id="revSubmit">Publier mon avis</button></div>`
+      :`<button class="btn ghost" data-authprompt="1" style="width:100%;margin-top:12px">Connectez-vous pour noter, commenter et partager votre photo</button>`}
+    <div id="avisList" class="avislist"></div></div>`;}
+function renderPhotos(slug){const host=$("#avisGallery");if(!host)return;const list=PHOTOS[slug]||[];
+  if(!list.length){host.hidden=true;host.innerHTML="";return;}host.hidden=false;
+  host.innerHTML=list.map(p=>`<div class="gph"><img src="${photoUrl(p.path)}" alt="Plat de ${esc(p.author_name||"")}" loading="lazy" data-photofull="${esc(photoUrl(p.path))}"/>
+    <span class="who">${esc(p.author_name||"")}</span>
+    ${S.user&&p.user_id===S.user.id?`<button class="gact del" data-delphoto="${p.id}" aria-label="Supprimer ma photo">✕</button>`:(S.user?`<button class="gact rep" data-repphoto="${p.id}" aria-label="Signaler">⚑</button>`:"")}</div>`).join("");}
+function renderComments(slug){const host=$("#avisList");if(!host)return;const list=CMTS[slug]||[];
+  if(!list.length){host.innerHTML=`<p class="noavis">Soyez le premier à partager votre avis sur cette recette.</p>`;return;}
+  host.innerHTML=list.map(c=>{const mine=S.user&&c.user_id===S.user.id;
+    return `<div class="cmt"><div class="hd"><span class="au">${esc(c.author_name||"Gourmand")}</span><span class="dt">${timeago(c.created_at)}</span></div>
+      <div class="bd">${esc(c.body)}</div>
+      <div class="acts">${mine?`<button data-cdel="${c.id}">Supprimer</button>`:(S.user?`<button data-report="${c.id}">Signaler</button>`:"")}</div></div>`;}).join("");}
+function loadComments(slug){if(!SB)return;SB.from("recipe_comments").select("id,user_id,author_name,body,created_at").eq("recipe_slug",slug).eq("status","visible").order("created_at",{ascending:false}).limit(60).then(({data})=>{CMTS[slug]=data||[];if(curId!=null&&R[curId].slug===slug)renderComments(slug);},()=>{});}
+function loadPhotos(slug){if(!SB)return;SB.from("recipe_photos").select("id,user_id,author_name,path,created_at").eq("recipe_slug",slug).eq("status","visible").order("created_at",{ascending:false}).limit(40).then(({data})=>{PHOTOS[slug]=data||[];if(curId!=null&&R[curId].slug===slug)renderPhotos(slug);},()=>{});}
+function refreshStat(slug){return SB.from("recipe_stats").select("*").eq("recipe_slug",slug).maybeSingle().then(({data})=>{if(data)STATS[slug]=data;},()=>{});}
+function compressImage(file){return new Promise((res,rej)=>{const img=new Image(),url=URL.createObjectURL(file);
+  img.onload=()=>{const max=1280;let w=img.width,h=img.height;if(w>h&&w>max){h=Math.round(h*max/w);w=max;}else if(h>max){w=Math.round(w*max/h);h=max;}
+    const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);
+    c.toBlob(b=>{URL.revokeObjectURL(url);b?res(b):rej();},"image/jpeg",0.82);};
+  img.onerror=()=>{URL.revokeObjectURL(url);rej();};img.src=url;});}
+async function submitReview(){if(!S.user){openAuth();return;}const r=R[curId],slug=r.slug;
+  const ta=$("#revText"),text=ta?ta.value.trim():"";const hasRate=draftRate.taste||draftRate.ease||draftRate.visual;
+  if(!hasRate&&!text&&!draftPhoto){toast("Ajoutez une note, un mot ou une photo.");return;}
+  const btn=$("#revSubmit");if(btn){btn.disabled=true;btn.textContent="Publication…";}
+  try{
+    if(hasRate){const vals=[draftRate.taste,draftRate.ease,draftRate.visual].filter(Boolean);const global=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+      await SB.from("recipe_ratings").upsert({recipe_slug:slug,user_id:S.user.id,stars:global,taste:draftRate.taste||null,ease:draftRate.ease||null,visual:draftRate.visual||null,updated_at:new Date().toISOString()},{onConflict:"recipe_slug,user_id"});MYRATE[slug]=global;}
+    if(text){const name=(S.profile&&S.profile.prenom)||"Gourmand";await SB.from("recipe_comments").insert({recipe_slug:slug,user_id:S.user.id,author_name:name,body:text});}
+    if(draftPhoto){const blob=await compressImage(draftPhoto);const path=`${S.user.id}/${slug}-${Date.now()}.jpg`;
+      const up=await SB.storage.from("dish-photos").upload(path,blob,{contentType:"image/jpeg",upsert:false});
+      if(!up.error){const name=(S.profile&&S.profile.prenom)||"Gourmand";await SB.from("recipe_photos").insert({recipe_slug:slug,user_id:S.user.id,author_name:name,path});}}
+    draftRate={taste:0,ease:0,visual:0};draftPhoto=null;toast("Merci pour votre avis !");
+    await refreshStat(slug);loadComments(slug);loadPhotos(slug);renderDetail();
+  }catch(e){toast("Publication impossible, réessayez.");if(btn){btn.disabled=false;btn.textContent="Publier mon avis";}}}
+async function reportComment(id){if(!S.user){openAuth();return;}await SB.rpc("report_comment",{p_id:id});toast("Merci, l'avis a été signalé.");if(curId!=null)loadComments(R[curId].slug);}
+async function delComment(id){if(!confirm("Supprimer votre commentaire ?"))return;await SB.from("recipe_comments").delete().eq("id",id);if(curId!=null){loadComments(R[curId].slug);refreshStat(R[curId].slug);}toast("Commentaire supprimé.");}
+async function reportPhoto(id){if(!S.user){openAuth();return;}await SB.rpc("report_photo",{p_id:id});toast("Merci, la photo a été signalée.");if(curId!=null)loadPhotos(R[curId].slug);}
+async function delPhoto(id){if(!confirm("Supprimer votre photo ?"))return;const ph=(PHOTOS[R[curId].slug]||[]).find(p=>p.id===id);
+  await SB.from("recipe_photos").delete().eq("id",id);if(ph){try{await SB.storage.from("dish-photos").remove([ph.path]);}catch(e){}}
+  if(curId!=null){loadPhotos(R[curId].slug);refreshStat(R[curId].slug);}toast("Photo supprimée.");}
 if(SB){SB.auth.getSession().then(({data})=>{if(data&&data.session)afterAuth();});}
 
 render();updateAcct();loadStats();
