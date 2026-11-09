@@ -176,7 +176,7 @@ function progTarget(){const p=S.prog,g=GOALS[p.goal]||GOALS.maintien;
   return{kcal,tdee,P:Math.round(kcal*d.P/100/4),L:Math.round(kcal*d.L/100/9),G:Math.round(kcal*d.G/100/4),plan:d};}
 /* Foyer : adaptation portions + besoins nutritionnels (Mifflin-St Jeor, estimation indicative). */
 const ACT={sedentaire:{l:"Sédentaire",f:1.2},leger:{l:"Peu actif",f:1.375},modere:{l:"Actif",f:1.55},intense:{l:"Très actif",f:1.725}};
-function newMember(){return{sexe:"f",age:0,taille:0,poids:0,act:"modere"};}
+function newMember(){return{sexe:"f",age:0,taille:0,poids:0,act:"modere",diet:"equilibre"};}
 function memberKcal(m){if(!m||!(m.poids>0&&m.taille>0&&m.age>0))return 0;
   const bmr=10*m.poids+6.25*m.taille-5*m.age+(m.sexe==="h"?5:-161);
   return Math.max(0,Math.round(bmr*((ACT[m.act]||ACT.modere).f)/10)*10);}
@@ -295,15 +295,19 @@ function viewHome(){
 }
 
 /* ---------- PROGRAMME NUTRITIONNEL ---------- */
-function pickMeal(cat,off,diet){
-  let pool=R.filter(r=>r.meal===cat&&r.macros&&recipeMatchesDiet(r,diet));
-  if(!pool.length)pool=R.filter(r=>r.meal===cat&&r.macros);
-  if(!pool.length)pool=R.filter(r=>r.macros&&recipeMatchesDiet(r,diet));
-  if(!pool.length)return R.find(r=>r.macros)||R[0];
+function foyerDiets(){if(S.foyer.mode!=="solo"){const ds=[...new Set(S.foyer.members.map(m=>m&&m.diet).filter(Boolean))];if(ds.length)return ds;}return [S.prog.diet];}
+function recipeMatchesAll(r,diets){return diets.every(d=>recipeMatchesDiet(r,d));}
+function pickMeal(cat,off,diets){
+  let pool=R.filter(r=>r.macros&&r.meal&&r.meal.includes(cat)&&recipeMatchesAll(r,diets));
+  if(!pool.length)pool=R.filter(r=>r.macros&&r.meal&&r.meal.includes(cat));
+  if(!pool.length)pool=R.filter(r=>r.macros&&recipeMatchesAll(r,diets));
+  if(!pool.length)pool=R.filter(r=>r.macros);
+  if(!pool.length)return R[0];
   return pool[(S.seed+off)%pool.length];}
-function buildPlan(diet){const m=[{l:"Petit-déjeuner",r:pickMeal("petitdej",0,diet)},
-  {l:"Déjeuner",r:pickMeal("plat",0,diet)},{l:"Dîner",r:pickMeal("plat",1,diet)}];
-  if(S.repas>=4)m.push({l:"Collation",r:pickMeal("collation",0,diet)||pickMeal("dessert",0,diet)});
+function buildPlan(diets){diets=Array.isArray(diets)?diets:[diets||S.prog.diet];
+  const m=[{l:"Petit-déjeuner",r:pickMeal("petit-dej",0,diets)},
+    {l:"Déjeuner",r:pickMeal("dejeuner",0,diets)},{l:"Dîner",r:pickMeal("diner",1,diets)}];
+  if(S.repas>=4)m.push({l:"Goûter",r:pickMeal("gouter",0,diets)});
   return m;}
 function updateProgLive(){const T=progTarget();
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
@@ -313,7 +317,7 @@ function updateProgLive(){const T=progTarget();
   if(bar)bar.style.width=Math.min(100,Math.round(ach/Math.max(1,T.kcal)*100))+"%";}
 function viewProgramme(){
   const T=progTarget(),diet=S.prog.diet,p=S.prog;
-  const plan=buildPlan(diet),nF=foyerCount();
+  const diets=foyerDiets(),plan=buildPlan(diets),nF=foyerCount();
   const tot=plan.reduce((a,x)=>({kcal:a.kcal+x.r.macros.kcal,p:a.p+x.r.macros.p,l:a.l+x.r.macros.l,g:a.g+x.r.macros.g}),{kcal:0,p:0,l:0,g:0});
   const pct=Math.min(100,Math.round(tot.kcal/Math.max(1,T.kcal)*100));
   const sx=(v,lab)=>`<button type="button" data-psex="${v}" aria-pressed="${p.sexe===v}">${lab}</button>`;
@@ -363,6 +367,7 @@ function viewProgramme(){
 
     ${nF>1?`<p class="disclaim" style="margin-top:12px">Valeurs par personne. Pour ${nF} personnes, multipliez les quantités de chaque recette par ${nF}.</p>`:""}
     <div class="proglabel">Votre journée «&nbsp;${esc(T.plan.l)}&nbsp;»</div>
+    ${S.foyer.mode!=="solo"&&diets.length>1?`<p class="disclaim" style="margin:-6px 0 10px">Menu composé pour convenir à tout le foyer&nbsp;: ${diets.map(d=>esc((DIETPLANS[d]||{}).l||d)).join(", ")}. Réglez le régime de chacun dans «&nbsp;Mon foyer&nbsp;».</p>`:(S.foyer.mode!=="solo"?`<p class="disclaim" style="margin:-6px 0 10px">Menu adapté au régime du foyer (${esc((DIETPLANS[diets[0]]||{}).l||diets[0])}). Donnez un régime à chaque personne dans «&nbsp;Mon foyer&nbsp;».</p>`:"")}
     ${mealHTML}
     <div class="anav" style="margin-top:var(--s24)"><button class="btn" style="width:100%" id="progSave">${ic("i-heart")}Ajouter la journée à mes favoris</button></div>
   </section>`;
@@ -380,6 +385,7 @@ function foyerSumHTML(needs){const n=foyerCount();
 function memberCard(m,i,solo){const kc=memberKcal(m);
   const sx=(v,lab)=>`<button type="button" data-msex="${i}:${v}" aria-pressed="${m.sexe===v}">${lab}</button>`;
   const acts=Object.entries(ACT).map(([k,v])=>`<option value="${k}" ${m.act===k?"selected":""}>${v.l}</option>`).join("");
+  const diets=Object.entries(DIETPLANS).map(([k,v])=>`<option value="${k}" ${(m.diet||"equilibre")===k?"selected":""}>${esc(v.l)}</option>`).join("");
   return `<div class="pcard"><div class="ph"><span class="av">${ic("i-user",'ic',1.7)}</span>
       <span class="nm">${solo?"Moi":"Personne "+(i+1)}</span>
       <span class="kc tnum" data-kc="${i}">${kc?`${kc} <small>kcal/j</small>`:""}</span></div>
@@ -389,6 +395,7 @@ function memberCard(m,i,solo){const kc=memberKcal(m);
       <div class="fld"><span>Taille</span><input type="number" inputmode="numeric" min="50" max="230" value="${m.taille||""}" data-mf="${i}:taille" placeholder="cm"/></div>
       <div class="fld"><span>Poids</span><input type="number" inputmode="numeric" min="10" max="250" value="${m.poids||""}" data-mf="${i}:poids" placeholder="kg"/></div>
       <div class="fld act"><span>Activité</span><select data-mf="${i}:act">${acts}</select></div>
+      <div class="fld act"><span>Régime</span><select data-mf="${i}:diet">${diets}</select></div>
     </div></div>`;}
 function updateFoyerKcal(){S.foyer.members.forEach((m,i)=>{const el=document.querySelector(`[data-kc="${i}"]`);
     if(el){const v=memberKcal(m);el.innerHTML=v?`${v} <small>kcal/j</small>`:"";}});
@@ -694,7 +701,7 @@ document.addEventListener("click",e=>{
   if(t.id==="scrim"||t.dataset.close!==undefined){closeSheets();return;}
   if(t.dataset.sort){S.sort=t.dataset.sort;closeSheets();render();return;}
   if(t.id==="progGen"){S.seed++;render();return;}
-  if(t.id==="progSave"){buildPlan().forEach(x=>{S.favs.add(x.r.id);});LS.set("favs",[...S.favs]);toast("Journée ajoutée à vos favoris");updateBadges();return;}
+  if(t.id==="progSave"){buildPlan(foyerDiets()).forEach(x=>{S.favs.add(x.r.id);});LS.set("favs",[...S.favs]);toast("Journée ajoutée à vos favoris");updateBadges();return;}
   if(t.dataset.addtag){addTag(t.dataset.addtag);return;}
   if(t.dataset.untag){delTag(t.dataset.untag);return;}
   if(t.dataset.course!==undefined){const n=t.dataset.course;S.cart.has(n)?S.cart.delete(n):S.cart.add(n);LS.set("cart",[...S.cart]);render();return;}
@@ -727,7 +734,7 @@ document.addEventListener("change",e=>{if(e.target.id==="revPhoto"){const f=e.ta
 function editProg(el){const pf=el.closest("[data-pf]");if(!pf)return false;const f=pf.dataset.pf;
   S.prog[f]=f==="act"?pf.value:(parseInt(pf.value,10)||0);LS.set("prog",S.prog);updateProgLive();return true;}
 function editMember(el){const mf=el.closest("[data-mf]");if(!mf)return false;const[i,field]=mf.dataset.mf.split(":");const m=S.foyer.members[+i];
-  if(m){m[field]=field==="act"?mf.value:(parseInt(mf.value,10)||0);LS.set("foyer",S.foyer);updateFoyerKcal();}return true;}
+  if(m){m[field]=(field==="act"||field==="diet")?mf.value:(parseInt(mf.value,10)||0);LS.set("foyer",S.foyer);if(field==="diet"){render();}else{updateFoyerKcal();}}return true;}
 document.addEventListener("input",e=>{if(editProg(e.target))return;if(editMember(e.target))return;if(e.target.id==="q"){S.q=e.target.value;const list=filtered();
   const host=$(".catmain .list");if(host)host.innerHTML=list.length?list.map(cardHTML).join(""):`<div class="empty" style="grid-column:1/-1">${ic("i-compass",'ic')}<h3>Aucune recette</h3><p>Décochez un critère.</p></div>`;
   const cnt=$(".catmain .sechead .count b");if(cnt)cnt.textContent=list.length;}});
