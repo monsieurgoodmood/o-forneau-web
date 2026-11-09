@@ -186,7 +186,8 @@ function foyerNeeds(){const filled=S.foyer.members.filter(m=>memberKcal(m)>0);if
   const total=filled.reduce((a,m)=>a+memberKcal(m),0);return{total,n:filled.length,per:Math.round(total/filled.length/10)*10};}
 
 const LS={get:(k,d)=>{try{return JSON.parse(localStorage.getItem("mf_"+k))??d}catch{return d}},
-          set:(k,v)=>{try{localStorage.setItem("mf_"+k,JSON.stringify(v))}catch{}}};
+          set:(k,v)=>{try{localStorage.setItem("mf_"+k,JSON.stringify(v))}catch{}
+            if(["favs","pantry","cart","foyer","prog"].includes(k)&&typeof saveCloud==="function")saveCloud();}};
 const S={tab:"home",astep:0,q:"",catOpen:false,
   obj:"equilibre",repas:3,seed:1,sort:"default",
   prog:(()=>{const d={sexe:"f",age:0,taille:0,poids:0,act:"modere",goal:"maintien",diet:"equilibre"};
@@ -623,7 +624,7 @@ function render(){$$(".navitem,.bottomnav button").forEach(b=>b.setAttribute("ar
 
 /* ---------- événements ---------- */
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-open],[data-fav],[data-aopt],[data-tab],[data-go],[data-obj],[data-repas],[data-goal],[data-diet],[data-psex],[data-addtag],[data-untag],[data-course],[data-fmode],[data-fcount],[data-ffam],[data-fnutri],[data-msex],[data-macro],[data-sort],[data-close],#openFilters,#openSort,#scrim,#aNext,#aPrev,#aSkip,#aBack,#catToggle,#catClear,#catClear2,#progGen,#progSave,#detailBack,#detailFav,#qgo");
+  const t=e.target.closest("[data-open],[data-fav],[data-aopt],[data-tab],[data-go],[data-obj],[data-repas],[data-goal],[data-diet],[data-psex],[data-addtag],[data-untag],[data-course],[data-fmode],[data-fcount],[data-ffam],[data-fnutri],[data-msex],[data-macro],[data-sort],[data-close],[data-auth],#acctBtn,#openFilters,#openSort,#scrim,#aNext,#aPrev,#aSkip,#aBack,#catToggle,#catClear,#catClear2,#progGen,#progSave,#detailBack,#detailFav,#qgo");
   if(!t)return;
   if(t.dataset.fav!==undefined){const id=+t.dataset.fav;S.favs.has(id)?S.favs.delete(id):S.favs.add(id);LS.set("favs",[...S.favs]);
     t.setAttribute("aria-pressed",S.favs.has(id));t.querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.2:1.6);updateBadges();e.stopPropagation();return;}
@@ -646,6 +647,11 @@ document.addEventListener("click",e=>{
   if(t.dataset.fnutri!==undefined){S.foyer.nutri=!S.foyer.nutri;LS.set("foyer",S.foyer);render();return;}
   if(t.dataset.msex){const[i,sx]=t.dataset.msex.split(":");if(S.foyer.members[+i]){S.foyer.members[+i].sexe=sx;LS.set("foyer",S.foyer);}render();return;}
   if(t.dataset.macro){macroMode=t.dataset.macro;renderDetail();return;}
+  if(t.id==="acctBtn"){openAuth();return;}
+  if(t.dataset.auth){const a=t.dataset.auth;
+    if(a==="toggle"){authMode=authMode==="signup"?"login":"signup";renderAuth();}
+    else if(a==="signup")doSignup();else if(a==="login")doLogin();else if(a==="logout")doLogout();
+    else if(a==="save")saveProfileEdits();else if(a==="delete")deleteAccount();return;}
   if(t.id==="openFilters"){fillFilterSheet();openSheet("filterSheet");return;}
   if(t.id==="openSort"){fillSortSheet();openSheet("sortSheet");return;}
   if(t.id==="scrim"||t.dataset.close!==undefined){closeSheets();return;}
@@ -681,8 +687,83 @@ document.addEventListener("input",e=>{if(editProg(e.target))return;if(editMember
   const cnt=$(".catmain .sechead .count b");if(cnt)cnt.textContent=list.length;}});
 document.addEventListener("submit",e=>{if(e.target.id==="aPantryForm"){e.preventDefault();const i=$("#aPantryInput");addTag(i.value);i.value="";i.focus();}});
 window.addEventListener("popstate",()=>{if($("#detail").classList.contains("on"))closeDetail();});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){if($("#scrim").classList.contains("on"))closeSheets();if($("#detail").classList.contains("on"))history.back();if($("#cook").classList.contains("on"))$("#cookClose").click();}});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&e.target.closest("#authBody input")){e.preventDefault();const b=$("#authBody").querySelector('[data-auth="signup"],[data-auth="login"],[data-auth="save"]');if(b)b.click();return;}
+  if(e.key==="Escape"){if($("#scrim").classList.contains("on"))closeSheets();if($("#detail").classList.contains("on"))history.back();if($("#cook").classList.contains("on"))$("#cookClose").click();}});
 
 let toastT=null;function toast(msg){const el=$("#toast");el.textContent=msg;el.style.opacity="1";clearTimeout(toastT);toastT=setTimeout(()=>el.style.opacity="0",2200);}
 
-render();
+/* ---------- COMPTE CLIENT (Supabase, UE) ---------- */
+const SB=(window.supabase&&window.SB_URL)?window.supabase.createClient(window.SB_URL,window.SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}}):null;
+S.user=null;S.profile=null;let authMode="signup";
+function acctInitial(){const p=S.profile;const s=(p&&p.prenom)?p.prenom:(S.user&&S.user.email||"?");return s[0].toUpperCase();}
+function updateAcct(){const b=$("#acctBtn"),l=$("#acctLbl");if(!b)return;
+  if(S.user){b.classList.add("in");l.textContent=(S.profile&&S.profile.prenom)?S.profile.prenom:"Mon compte";}
+  else{b.classList.remove("in");l.textContent="Se connecter";}}
+function authErr(m){const e=$("#authErr");if(e){e.textContent=m||"";e.hidden=!m;}}
+function trad(m){m=(m||"").toLowerCase();
+  if(m.includes("already")||m.includes("registered")||m.includes("exists"))return "Cet e-mail a déjà un compte — connectez-vous.";
+  if(m.includes("invalid")||m.includes("credentials"))return "E-mail ou mot de passe incorrect.";
+  if(m.includes("password"))return "Mot de passe : 6 caractères minimum.";
+  if(m.includes("email"))return "E-mail invalide.";
+  return "Une erreur est survenue, réessayez.";}
+function renderAuth(){const body=$("#authBody");if(!body)return;$("#authTitle").textContent=S.user?"Mon compte":(authMode==="signup"?"Créer un compte":"Se connecter");
+  if(S.user){const p=S.profile||{};
+    body.innerHTML=`<div class="acctcard"><span class="av">${esc(acctInitial())}</span>
+      <div class="who"><div class="nm">${esc(p.prenom||"Bienvenue")}</div><div class="em">${esc(S.user.email||"")}</div></div></div>
+      <div class="authform">
+      <div class="fld"><span>Prénom</span><input id="apPrenom" value="${esc(p.prenom||"")}"/></div>
+      <div class="fld"><span>Nom <span class="opt">(facultatif)</span></span><input id="apNom" value="${esc(p.nom||"")}"/></div>
+      <div class="fld"><span>Téléphone <span class="opt">(facultatif)</span></span><input id="apTel" type="tel" value="${esc(p.telephone||"")}" placeholder="06…"/></div>
+      <label class="consent"><input type="checkbox" id="apConsent" ${p.marketing_consent?"checked":""}/><span>Je souhaite recevoir les recettes, offres et nouveautés de Maison Forneau par e-mail. Désinscription à tout moment.</span></label>
+      <button class="btn" data-auth="save">${ic("i-check")}Enregistrer</button>
+      <button class="btn ghost" data-auth="logout">Se déconnecter</button>
+      <a class="dangerlink" data-auth="delete">Supprimer mon compte et mes données</a></div>`;
+  }else{const s=authMode==="signup";
+    body.innerHTML=`<p style="color:var(--muted);margin:0 0 14px;font-size:14px">${s?"Créez votre compte pour retrouver vos favoris et votre programme sur tous vos appareils.":"Connectez-vous pour retrouver vos favoris et votre programme."}</p>
+      <div class="authform"><div class="autherr" id="authErr" hidden></div>
+      <div class="fld"><span>E-mail</span><input id="auEmail" type="email" autocomplete="email" placeholder="vous@exemple.com"/></div>
+      ${s?`<div class="fld"><span>Prénom</span><input id="auPrenom" autocomplete="given-name" placeholder="Prénom"/></div>
+      <div class="fld"><span>Nom <span class="opt">(facultatif)</span></span><input id="auNom" autocomplete="family-name"/></div>
+      <div class="fld"><span>Téléphone <span class="opt">(facultatif)</span></span><input id="auTel" type="tel" autocomplete="tel" placeholder="06…"/></div>`:""}
+      <div class="fld"><span>Mot de passe</span><input id="auPass" type="password" autocomplete="${s?"new-password":"current-password"}" placeholder="6 caractères min."/></div>
+      ${s?`<label class="consent"><input type="checkbox" id="auConsent"/><span>Je souhaite recevoir les recettes, offres et nouveautés par e-mail. Facultatif, désinscription à tout moment.</span></label>`:""}
+      <button class="btn" data-auth="${s?"signup":"login"}">${s?"Créer mon compte":"Se connecter"}</button>
+      ${s?`<p class="authdisc">En créant un compte, vous acceptez notre <a href="legal/privacy.html" target="_blank" rel="noopener">politique de confidentialité</a>. Vos données sont hébergées dans l'Union européenne.</p>`:""}
+      <div class="authtoggle">${s?"Déjà un compte ?":"Pas encore de compte ?"} <button data-auth="toggle">${s?"Se connecter":"Créer un compte"}</button></div></div>`;}}
+function openAuth(){if(!SB){toast("Comptes bientôt disponibles");return;}renderAuth();openSheet("authSheet");}
+function collectState(){return{favs:[...S.favs],pantry:[...S.pantry],cart:[...S.cart],foyer:S.foyer,prog:S.prog};}
+let cloudT=null;
+function saveCloud(){if(!S.user||!SB)return;clearTimeout(cloudT);cloudT=setTimeout(()=>{
+  SB.from("user_profiles").update({app_state:collectState(),updated_at:new Date().toISOString()}).eq("id",S.user.id).then(()=>{},()=>{});},1200);}
+function loadCloud(){const st=S.profile&&S.profile.app_state;if(!st||typeof st!=="object")return;
+  if(Array.isArray(st.favs))st.favs.forEach(x=>S.favs.add(x));
+  if(Array.isArray(st.pantry))st.pantry.forEach(x=>S.pantry.add(x));
+  if(Array.isArray(st.cart))st.cart.forEach(x=>S.cart.add(x));
+  if(st.foyer)S.foyer={...S.foyer,...st.foyer,members:Array.isArray(st.foyer.members)?st.foyer.members:S.foyer.members};
+  if(st.prog)S.prog={...S.prog,...st.prog};
+  try{localStorage.setItem("mf_favs",JSON.stringify([...S.favs]));localStorage.setItem("mf_pantry",JSON.stringify([...S.pantry]));localStorage.setItem("mf_cart",JSON.stringify([...S.cart]));}catch{}
+  render();updateBadges();}
+async function afterAuth(){try{const {data}=await SB.auth.getUser();S.user=data&&data.user||null;
+  if(S.user){const r=await SB.from("user_profiles").select("*").eq("id",S.user.id).maybeSingle();S.profile=r.data||null;loadCloud();}
+  updateAcct();}catch(e){}}
+async function doSignup(){const email=$("#auEmail").value.trim(),pass=$("#auPass").value,prenom=$("#auPrenom").value.trim();
+  authErr("");if(!email||!pass)return authErr("E-mail et mot de passe requis.");if(!prenom)return authErr("Votre prénom, s'il vous plaît.");if(pass.length<6)return authErr("Mot de passe : 6 caractères minimum.");
+  const consent=($("#auConsent")||{}).checked||false;
+  const {error}=await SB.auth.signUp({email,password:pass,options:{data:{prenom,nom:$("#auNom").value.trim(),telephone:$("#auTel").value.trim(),marketing_consent:consent,locale:"fr"}}});
+  if(error)return authErr(trad(error.message));
+  await afterAuth();saveCloud();closeSheets();toast("Bienvenue "+prenom+" ! Compte créé.");}
+async function doLogin(){const email=$("#auEmail").value.trim(),pass=$("#auPass").value;authErr("");if(!email||!pass)return authErr("E-mail et mot de passe requis.");
+  const {error}=await SB.auth.signInWithPassword({email,password:pass});if(error)return authErr(trad(error.message));
+  await afterAuth();closeSheets();toast("Content de vous revoir !");}
+async function doLogout(){await SB.auth.signOut();S.user=null;S.profile=null;updateAcct();closeSheets();toast("Déconnecté.");}
+async function saveProfileEdits(){const patch={prenom:$("#apPrenom").value.trim(),nom:$("#apNom").value.trim(),telephone:$("#apTel").value.trim(),marketing_consent:$("#apConsent").checked};
+  patch.consent_at=patch.marketing_consent?new Date().toISOString():null;
+  const {error}=await SB.from("user_profiles").update({...patch,updated_at:new Date().toISOString()}).eq("id",S.user.id);
+  if(error)return toast("Erreur d'enregistrement");S.profile={...S.profile,...patch};updateAcct();closeSheets();toast("Profil enregistré.");}
+async function deleteAccount(){if(!confirm("Supprimer votre compte et toutes vos données ? Cette action est définitive."))return;
+  try{await SB.from("user_profiles").delete().eq("id",S.user.id);}catch(e){}
+  await SB.auth.signOut();S.user=null;S.profile=null;updateAcct();closeSheets();toast("Compte supprimé.");}
+if(SB){SB.auth.getSession().then(({data})=>{if(data&&data.session)afterAuth();});}
+
+render();updateAcct();
