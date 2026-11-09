@@ -581,7 +581,7 @@ function renderDetail(){const r=R[curId],k=curServ/r.serv,cov=coverage(r),P=[...
 
 /* ---------- mode cuisine ---------- */
 let cookStep=0,cookR=null,timerInt=null,timerLeft=0;
-function startCook(id){cookR=R[id];cookStep=0;renderCook();$("#cook").classList.add("on");requestWake();}
+function startCook(id){cookR=R[id];cookStep=0;renderCook();setMicUI(false);$("#cook").classList.add("on");requestWake();}
 function renderCook(){const r=cookR,s=r.steps[cookStep],n=r.steps.length;
   $("#cookKicker").textContent=`Étape ${cookStep+1} sur ${n}`;$("#cookCount").textContent=`${cookStep+1}/${n}`;
   $("#cookText").textContent=s[0];$("#cookProg").style.width=((cookStep+1)/n*100)+"%";$("#cookPrev").disabled=cookStep===0;
@@ -589,11 +589,38 @@ function renderCook(){const r=cookR,s=r.steps[cookStep],n=r.steps.length;
   stopTimer();const tw=$("#cookTimerWrap");if(s[1]&&s[1]>=60){tw.hidden=false;timerLeft=s[1];paintTimer();}else tw.hidden=true;}
 function paintTimer(){const m=Math.floor(timerLeft/60),sec=timerLeft%60;$("#cookTimer").textContent=`${m}:${String(sec).padStart(2,"0")}`;}
 function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;$("#cookTimerBtn").querySelector("span").textContent="Minuteur";}}
+/* ---------- voix mains libres (mode cuisine) ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let recog=null,voiceOn=false;
+function speak(txt){try{if(!window.speechSynthesis)return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang="fr-FR";u.rate=1;window.speechSynthesis.speak(u);}catch(e){}}
+function speakStep(){if(cookR)speak("Étape "+(cookStep+1)+". "+cookR.steps[cookStep][0]);}
+function vstat(t){const el=$("#voiceStatus");if(el)el.textContent=t;}
+function setMicUI(on){const b=$("#cookMic");if(b){b.classList.toggle("on",on);b.setAttribute("aria-pressed",on);}const l=$("#voiceLabel");if(l)l.textContent=on?"Écoute…":"Activer la voix";}
+function toggleVoice(){if(!SR){vstat("La commande vocale n'est pas disponible sur ce navigateur.");return;}voiceOn?stopVoice():startVoice();}
+function startVoice(){if(!SR)return;try{if("Notification"in window&&Notification.permission==="default")Notification.requestPermission();}catch(e){}
+  try{recog=new SR();}catch(e){return;}recog.lang="fr-FR";recog.continuous=true;recog.interimResults=false;
+  recog.onresult=e=>{handleVoice((e.results[e.results.length-1][0].transcript||"").toLowerCase());};
+  recog.onerror=e=>{if(e.error==="not-allowed"||e.error==="service-not-allowed"){voiceOn=false;setMicUI(false);vstat("Micro refusé. Autorisez le micro dans les réglages du téléphone.");}};
+  recog.onend=()=>{if(voiceOn){try{recog.start();}catch(e){}}};
+  try{recog.start();voiceOn=true;setMicUI(true);vstat("À l'écoute… « suivante », « minuteur », « répète »");}catch(e){}}
+function stopVoice(){voiceOn=false;setMicUI(false);try{recog&&recog.stop();}catch(e){}recog=null;try{window.speechSynthesis&&window.speechSynthesis.cancel();}catch(e){}}
+function handleVoice(t){const has=(...w)=>w.some(x=>t.includes(x));
+  if(has("suivant","prochaine","continue","avance"," next")){cookAdvance();}
+  else if(has("précéd","preced","retour","arrière","arriere","reviens","back")){if(cookStep>0){cookStep--;renderCook();speakStep();}}
+  else if(has("répèt","repet","relis","redis","répéter","repeter")){speakStep();}
+  else if(has("minuteur","chrono","timer","lance le temps")){startStepTimer();}
+  else if(has("pause","arrête","arrete"," stop","attends")){stopTimer();speak("Minuteur en pause.");vstat("En pause.");}
+  else if(has("fini","terminé","termine","c'est prêt","c'est bon")){cookAdvance();}}
+function cookAdvance(){if(!cookR)return;if(cookStep<cookR.steps.length-1){cookStep++;renderCook();speakStep();}else{finishCook();}}
+function startStepTimer(){if(!cookR)return;const s=cookR.steps[cookStep];if(s[1]&&s[1]>=60){$("#cookTimerWrap").hidden=false;if(!timerInt)$("#cookTimerBtn").click();speak("Minuteur lancé, "+Math.round(s[1]/60)+" minutes.");}else{speak("Cette étape n'a pas de minuteur.");vstat("Pas de minuteur pour cette étape.");}}
+function finishCook(){$("#cook").classList.remove("on");releaseWake();stopVoice();toast("Bon appétit");}
+function notifyTimer(){try{if("Notification"in window&&Notification.permission==="granted")new Notification("Ô Forneau !",{body:"Minuteur terminé — étape "+(cookStep+1)});}catch(e){}try{navigator.vibrate&&navigator.vibrate([200,120,200]);}catch(e){}}
 $("#cookTimerBtn").addEventListener("click",()=>{if(timerInt){stopTimer();return;}$("#cookTimerBtn").querySelector("span").textContent="Pause";
-  timerInt=setInterval(()=>{if(timerLeft>0){timerLeft--;paintTimer();}else{stopTimer();toast("Minuteur terminé");}},1000);});
-$("#cookNext").onclick=()=>{if(cookStep<cookR.steps.length-1){cookStep++;renderCook();}else{$("#cook").classList.remove("on");releaseWake();toast("Bon appétit");}};
-$("#cookPrev").onclick=()=>{if(cookStep>0){cookStep--;renderCook();}};
-$("#cookClose").onclick=()=>{$("#cook").classList.remove("on");stopTimer();releaseWake();};
+  timerInt=setInterval(()=>{if(timerLeft>0){timerLeft--;paintTimer();}else{stopTimer();toast("Minuteur terminé");notifyTimer();speak("Minuteur terminé.");}},1000);});
+$("#cookNext").onclick=()=>cookAdvance();
+$("#cookPrev").onclick=()=>{if(cookStep>0){cookStep--;renderCook();if(voiceOn)speakStep();}};
+$("#cookClose").onclick=()=>{$("#cook").classList.remove("on");stopTimer();releaseWake();stopVoice();};
+$("#cookMic").onclick=()=>toggleVoice();
 let wake=null;async function requestWake(){try{if("wakeLock"in navigator)wake=await navigator.wakeLock.request("screen");}catch{}}
 function releaseWake(){try{wake&&wake.release();wake=null;}catch{}}
 
