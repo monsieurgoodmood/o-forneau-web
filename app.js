@@ -276,7 +276,7 @@ function viewHome(){
       <img src="img/hero-forneau.jpg" alt="Poêle en titane Maison Forneau" onerror="this.style.display='none'"/>
       <div class="cap"><div class="ey">Ô Forneau !</div><h1>Bien manger, simplement</h1>
         <div class="ctag">par Maison Forneau</div></div></div></section>
-    <p class="hsub">Des recettes au titane, adaptées à votre régime, votre appareil et votre temps. Par où commencer&nbsp;?</p>
+    <p class="hsub">Les meilleures recettes virales des réseaux, réunies ici — réécrites, classées et adaptées à votre régime, votre appareil et votre foyer. Par où commencer&nbsp;?</p>
     <div class="menugrid">
       ${menuCard("programme","i-target","Mon programme nutritionnel","Un objectif, une journée de repas équilibrée.",true)}
       ${menuCard("foyer","i-users","Pour qui je cuisine ?","Solo ou famille — quantités et nutrition adaptées.")}
