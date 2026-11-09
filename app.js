@@ -194,7 +194,7 @@ const S={tab:"home",astep:0,q:"",catOpen:false,
     const s=LS.get("prog",{})||{};return{...d,...s};})(),
   foyer:(()=>{const d={mode:"solo",count:2,family:false,nutri:false,members:[]};const s=LS.get("foyer",{})||{};
     return{...d,...s,members:Array.isArray(s.members)?s.members:[]};})(),
-  diets:new Set(),appl:new Set(),time:null,avoid:new Set(),
+  diets:new Set(),appl:new Set(),time:null,avoid:new Set(),meal:new Set(),
   pantry:new Set(LS.get("pantry",[])),favs:new Set(LS.get("favs",[])),usePantry:false,cart:new Set(LS.get("cart",[]))};
 const PANTRY_SUGG=["pois chiches","tomate","citron","avocat","banane","pomme","oignon","ail","lait","œuf","farine","épinards","coriandre","yaourt nature","beurre de cacahuète","quinoa"];
 
@@ -226,6 +226,7 @@ function coverage(r){const key=r.ing.filter(x=>!(x[3]&&x[3].staple));
 function filtered(){let list=R.slice();
   if(S.q){const q=norm(S.q);list=list.filter(r=>norm(r.title).includes(q)||r.ing.some(x=>norm(x[2]).includes(q)));}
   if(S.diets.size)list=list.filter(r=>[...S.diets].every(d=>r.diets.includes(d)));
+  if(S.meal.size)list=list.filter(r=>r.meal&&[...S.meal].some(mm=>r.meal.includes(mm)));
   if(S.appl.size)list=list.filter(r=>[...S.appl].some(a=>r.appl.includes(a)));
   if(S.time)list=list.filter(r=>r.total<=S.time);
   if(S.avoid.size)list=list.filter(r=>{const h=allergenHits(r);return![...S.avoid].some(a=>h.has(a));});
@@ -241,6 +242,8 @@ const SORTS=[{k:"default",l:"Pertinence",i:"i-spark"},{k:"rated",l:"Les mieux no
   {k:"time",l:"Temps total (court → long)",i:"i-clock"},
   {k:"quick",l:"Préparation la plus rapide",i:"i-timer"},{k:"name",l:"Ordre alphabétique (A → Z)",i:"i-sliders"},
   {k:"kcal",l:"Les plus légères (kcal)",i:"i-flame"}];
+const MEALS=[{k:"petit-dej",l:"Petit-déjeuner"},{k:"dejeuner",l:"Déjeuner"},{k:"diner",l:"Dîner"},{k:"gouter",l:"Goûter"},{k:"encas",l:"En-cas"},{k:"proteine",l:"Pause protéinée"},{k:"dessert",l:"Dessert"}];
+function mealChips(){return `<div class="mealchips">${MEALS.map(m=>`<button class="mchip${S.meal.has(m.k)?' on':''}" data-meal="${m.k}">${m.l}</button>`).join("")}</div>`;}
 
 /* ---------- carte verticale ---------- */
 function cardHTML(r){
@@ -500,6 +503,7 @@ function viewCatalogue(){
         <span class="count"><b style="color:var(--ink)">${list.length}</b> sur ${R.length}</span></div>
       <label class="searchbar" style="margin:0 0 16px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><use href="#i-search"/></svg>
         <input id="q" type="search" value="${esc(S.q)}" placeholder="Rechercher une recette, un ingrédient…" aria-label="Rechercher"/></label>
+      ${mealChips()}
       <div style="margin-bottom:16px"><button class="filtersbtn" id="catToggle">${ic("i-sliders")}Filtres${nF?`<span class="n">${nF}</span>`:""}</button></div>
       <div id="catFilters" ${S.catOpen?"":"hidden"} style="margin-bottom:20px;padding:16px;border:1px solid var(--line);border-radius:var(--r14);background:var(--card)">${filterGroups()}</div>
       ${grid(list,"i-compass","Aucune recette avec ces filtres","Décochez un critère.","catClear2","Réinitialiser")}
@@ -656,7 +660,7 @@ function render(){$$(".navitem,.bottomnav button").forEach(b=>b.setAttribute("ar
 
 /* ---------- événements ---------- */
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-open],[data-fav],[data-aopt],[data-tab],[data-go],[data-obj],[data-repas],[data-goal],[data-diet],[data-psex],[data-addtag],[data-untag],[data-course],[data-fmode],[data-fcount],[data-ffam],[data-fnutri],[data-msex],[data-macro],[data-sort],[data-close],[data-auth],[data-star],[data-report],[data-cdel],[data-repphoto],[data-delphoto],[data-authprompt],[data-photofull],#revSubmit,#acctBtn,#openFilters,#openSort,#scrim,#aNext,#aPrev,#aSkip,#aBack,#catToggle,#catClear,#catClear2,#progGen,#progSave,#detailBack,#detailFav,#qgo");
+  const t=e.target.closest("[data-open],[data-fav],[data-aopt],[data-tab],[data-go],[data-obj],[data-repas],[data-goal],[data-diet],[data-psex],[data-addtag],[data-untag],[data-course],[data-fmode],[data-fcount],[data-ffam],[data-fnutri],[data-msex],[data-macro],[data-sort],[data-meal],[data-close],[data-auth],[data-star],[data-report],[data-cdel],[data-repphoto],[data-delphoto],[data-authprompt],[data-photofull],#revSubmit,#acctBtn,#openFilters,#openSort,#scrim,#aNext,#aPrev,#aSkip,#aBack,#catToggle,#catClear,#catClear2,#progGen,#progSave,#detailBack,#detailFav,#qgo");
   if(!t)return;
   if(t.dataset.fav!==undefined){const id=+t.dataset.fav;S.favs.has(id)?S.favs.delete(id):S.favs.add(id);LS.set("favs",[...S.favs]);
     t.setAttribute("aria-pressed",S.favs.has(id));t.querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.2:1.6);updateBadges();e.stopPropagation();return;}
@@ -667,6 +671,7 @@ document.addEventListener("click",e=>{
     else if(APPL[k]){S.appl.has(k)?S.appl.delete(k):S.appl.add(k);}
     render();return;}
   if(t.dataset.tab){setTab(t.dataset.tab);return;}
+  if(t.dataset.meal!==undefined){const k=t.dataset.meal;S.meal.has(k)?S.meal.delete(k):S.meal.add(k);render();return;}
   if(t.dataset.go==="frigo"){S.tab="assistant";S.astep=ASTEPS.length-1;render();window.scrollTo(0,0);return;}
   if(t.dataset.obj){S.obj=t.dataset.obj;render();return;}
   if(t.dataset.goal){S.prog.goal=t.dataset.goal;LS.set("prog",S.prog);render();return;}
@@ -698,7 +703,7 @@ document.addEventListener("click",e=>{
   if(t.id==="aSkip"){S.astep++;render();return;}
   if(t.id==="aBack"){S.astep=0;render();window.scrollTo(0,0);return;}
   if(t.id==="catToggle"){S.catOpen=!S.catOpen;render();return;}
-  if(t.id==="catClear"||t.id==="catClear2"){S.diets.clear();S.appl.clear();S.time=null;S.avoid.clear();S.q="";render();return;}
+  if(t.id==="catClear"||t.id==="catClear2"){S.diets.clear();S.appl.clear();S.time=null;S.avoid.clear();S.meal.clear();S.q="";render();return;}
   if(t.id==="detailBack"){history.back();return;}
   if(t.id==="detailFav"){const id=curId;S.favs.has(id)?S.favs.delete(id):S.favs.add(id);LS.set("favs",[...S.favs]);
     t.setAttribute("aria-pressed",S.favs.has(id));t.querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.3:1.6);updateBadges();return;}
