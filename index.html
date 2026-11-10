@@ -573,6 +573,25 @@ img{max-width:100%}
 .wguest{background:none;border:0;color:#fff;opacity:.88;font-size:14px;text-decoration:underline;text-underline-offset:3px;padding:10px;cursor:pointer}
 .wguest:hover{opacity:1}
 .wdisc{font-size:11.5px;opacity:.78;margin:14px 0 0;line-height:1.5}
+/* ---- Idées du jour (accueil) ---- */
+.sugstrip{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 8px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.sugstrip::-webkit-scrollbar{display:none}
+.sugcard{flex:0 0 188px;scroll-snap-align:start;text-align:left;display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--line);cursor:pointer;transition:border-color .15s}
+.sugcard:hover{border-color:var(--lineGold)}
+.sugcard .sph{display:block;aspect-ratio:16/10;background:var(--surface);overflow:hidden}
+.sugcard .sph img{width:100%;height:100%;object-fit:cover}
+.sugcard .sbody{padding:10px 12px 12px;display:flex;flex-direction:column;gap:5px}
+.sugcard .st3{font-family:var(--fD);font-weight:600;font-size:14px;color:var(--greenDeep);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sugcard .smeta{font-size:12px;color:var(--muted)}
+.sugcard .sr{color:var(--gold);font-weight:600}
+/* ---- Snackbar CRO (incitation compte) ---- */
+.cropbar{position:fixed;left:12px;right:12px;bottom:calc(var(--navH,66px) + 12px + env(safe-area-inset-bottom));z-index:1500;background:var(--greenDeep);color:#fff;border-radius:16px;padding:13px 14px;box-shadow:0 10px 30px rgba(20,35,22,.3);display:flex;flex-direction:column;gap:10px;transform:translateY(20px);opacity:0;transition:transform .25s,opacity .25s;max-width:560px;margin:0 auto}
+.cropbar.on{transform:translateY(0);opacity:1}
+.cropbar .ct{font-size:13.5px;line-height:1.45;opacity:.95}
+.cropbar .cx{display:flex;align-items:center;gap:10px}
+.cropbar .cx .btn{flex:1;min-height:42px;background:var(--goldGrad);color:#fff;border:0}
+.cropbar .cxc{background:rgba(255,255,255,.14);border:0;color:#fff;width:38px;height:38px;border-radius:999px;font-size:14px;cursor:pointer;flex:0 0 auto}
+@media (prefers-reduced-motion:reduce){.cropbar{transition:none}}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -742,6 +761,10 @@ img{max-width:100%}
     </div>
     <p class="wdisc">Gratuit. Données hébergées dans l'Union européenne. Vous pourrez créer un compte à tout moment.</p>
   </div>
+</div>
+<div class="cropbar" id="cropbar" hidden>
+  <span class="ct">Créez un compte pour garder vos réglages et recettes sur tous vos appareils.</span>
+  <div class="cx"><button class="btn" id="cropGo">Créer mon compte</button><button class="cxc" id="cropClose" aria-label="Fermer">✕</button></div>
 </div>
 <div id="toast"></div>
 <script>window.SB_URL="https://kbxguxcfcsyhktjyeihu.supabase.co";window.SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtieGd1eGNmY3N5aGt0anllaWh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxNjcyMzcsImV4cCI6MjEwOTc0MzIzN30.WlxWbBJis8GYtNeyrxN_FSjfNdYCThsw6C97OlgWrjU";</script>
