@@ -23,6 +23,15 @@ const PRODUCTS = {
   moule:{n:"Moule à cake titane",d:"Cakes et gâteaux — à venir",have:0,i:"i-oven"},
   bol:{n:"Bol titane",d:"Porridge, service — à venir",have:0,i:"i-bowl"},
 };
+const PBEN={
+  poele:["Saisie homogène, sans accroche","Titane pur sans PFAS, garantie à vie"],
+  sauteuse:["Parfaite pour sautés et plats mijotés","Montée en température douce et régulière"],
+  wok:["Sautés vifs à feu fort","Surface nue, zéro PFAS"],
+  casserole:["Idéale currys, soupes et céréales","Chaleur douce, cuisson régulière"],
+  marmite:["Grands volumes : pâtes, bouillons","Titane léger, passe au four"],
+  crepiere:["Crêpes et pancakes sans accroche","Surface lisse, nettoyage express"],
+  planche:["Découpe hygiénique, inrayable","Ne retient ni odeurs ni taches"],
+};
 
 const R = [
  {slug:"curry-pois-chiches",title:"Curry de pois chiches coco-épinards",product:"sauteuse",
@@ -195,7 +204,7 @@ const S={tab:"home",astep:0,q:"",catOpen:false,
   foyer:(()=>{const d={mode:"solo",count:2,family:false,nutri:false,members:[]};const s=LS.get("foyer",{})||{};
     return{...d,...s,members:Array.isArray(s.members)?s.members:[]};})(),
   diets:new Set(),appl:new Set(),time:null,avoid:new Set(),meal:new Set(),
-  pantry:new Set(LS.get("pantry",[])),favs:new Set(LS.get("favs",[])),usePantry:false,cart:new Set(LS.get("cart",[]))};
+  pantry:new Set(LS.get("pantry",[])),favs:new Set(LS.get("favs",[])),usePantry:false,cart:new Set(LS.get("cart",[])),owns:new Set(LS.get("owns",[]))};
 const PANTRY_SUGG=["pois chiches","tomate","citron","avocat","banane","pomme","oignon","ail","lait","œuf","farine","épinards","coriandre","yaourt nature","beurre de cacahuète","quinoa"];
 
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -530,10 +539,10 @@ function viewCatalogue(){
     <div class="catmain">
       <div class="sechead" style="margin-top:0"><h2>Les recettes</h2>
         <span class="count"><b style="color:var(--ink)">${list.length}</b> sur ${R.length}</span></div>
-      <label class="searchbar" style="margin:0 0 16px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><use href="#i-search"/></svg>
+      <div class="catbar"><label class="searchbar" style="margin:0"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><use href="#i-search"/></svg>
         <input id="q" type="search" value="${esc(S.q)}" placeholder="Rechercher une recette, un ingrédient…" aria-label="Rechercher"/></label>
-      ${mealChips()}
-      <div style="margin-bottom:16px"><button class="filtersbtn" id="catToggle">${ic("i-sliders")}Filtres${nF?`<span class="n">${nF}</span>`:""}</button></div>
+      ${mealChips()}</div>
+      <div style="margin:10px 0 16px"><button class="filtersbtn" id="catToggle">${ic("i-sliders")}Filtres${nF?`<span class="n">${nF}</span>`:""}</button></div>
       <div id="catFilters" ${S.catOpen?"":"hidden"} style="margin-bottom:20px;padding:16px;border:1px solid var(--line);border-radius:var(--r14);background:var(--card)">${filterGroups()}</div>
       ${grid(list,"i-compass","Aucune recette avec ces filtres","Décochez un critère.","catClear2","Réinitialiser")}
     </div></div>`;
@@ -572,10 +581,16 @@ function renderDetail(){const r=R[curId],k=curServ/r.serv,cov=coverage(r),P=[...
       ${!o.staple?`<span class="have ${have?'ok':'no'}">${have?ic("i-check",'ic',2.2)+"J'ai":"À acheter"}</span>`:""}</div>`;}).join("");
   const subsHTML=r.subs.map(s=>`<div style="padding:9px 0;font-size:14.5px;border-bottom:1px solid var(--lineSoft)">${ic("i-swap",'ic',1.8)} <b>${esc(s[0])}</b> <span style="color:var(--gold)">→</span> <span style="color:var(--muted)">${esc(s[1])}</span></div>`).join("");
   const stepsHTML=r.steps.map((s,i)=>`<div class="step"><span class="no">${i+1}</span><div class="tx"><div>${esc(s[0])}</div>${s[1]?`<span class="dur">${ic("i-clock",'ic')}<span class="tnum">${Math.round(s[1]/60)} min</span></span>`:""}</div></div>`).join("");
+  const owned=S.owns.has(r.product),ben=PBEN[r.product],shop=(prod.have&&prod.h)?SHOP+prod.h:null;
+  const cta=owned?`<span class="cta owned">${ic("i-check",'ic',2.2)}Étapes adaptées</span>`
+    :shop?`<a class="cta" href="${shop}" target="_blank" rel="noopener">Voir le produit${ic("i-ext",'ic')}</a>`
+    :`<span class="cta">Bientôt au catalogue</span>`;
   const prodInner=`<div class="pic">${prod.img?`<img src="${prod.img}" alt="${esc(prod.n)}" loading="lazy" onerror="this.remove()"/>`:ic(prod.i,'ic',1.8)}</div>
-      <div class="tx"><div class="k">Ustensile Forneau</div><div class="n">${esc(prod.n)}</div><div class="d">${esc(prod.d)}</div></div>
-      ${prod.have?`<span class="cta">Voir le produit${ic("i-ext",'ic')}</span>`:`<span class="cta">Bientôt au catalogue</span>`}`;
-  const prodHTML=prod.have&&prod.h?`<a class="product" href="${SHOP}${prod.h}" target="_blank" rel="noopener">${prodInner}</a>`:`<div class="product gap">${prodInner}</div>`;
+      <div class="tx"><div class="k">Ustensile Forneau${owned?" · vous l'avez":""}</div><div class="n">${esc(prod.n)}</div>
+      ${ben?`<ul class="pbull">${ben.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:`<div class="d">${esc(prod.d)}</div>`}</div>
+      ${cta}`;
+  const prodHTML=`<div class="product${owned?' owned':''}${shop?'':' gap'}">${prodInner}</div>
+      ${(shop||prod.have)?`<button class="ownchip" data-own="${r.product}">${owned?"✓ Vous l'avez déjà — merci":"Vous l'avez déjà ?"}</button>`:""}`;
   $("#detailBody").innerHTML=`
     <div class="dcover"><img src="${r.img}" alt="${esc(r.title)}" onerror="this.style.opacity=0"/></div>
     <h1 class="dtitle">${esc(r.title)}</h1>
@@ -692,7 +707,7 @@ function render(){$$(".navitem,.bottomnav button").forEach(b=>b.setAttribute("ar
 
 /* ---------- événements ---------- */
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-open],[data-fav],[data-aopt],[data-tab],[data-go],[data-obj],[data-repas],[data-goal],[data-diet],[data-psex],[data-addtag],[data-untag],[data-course],[data-fmode],[data-fcount],[data-ffam],[data-fnutri],[data-msex],[data-macro],[data-sort],[data-meal],[data-close],[data-auth],[data-star],[data-report],[data-cdel],[data-repphoto],[data-delphoto],[data-authprompt],[data-photofull],#revSubmit,#wSignup,#wLogin,#wGuest,#sugMore,#cropGo,#cropClose,#acctBtn,#openFilters,#openSort,#scrim,#aNext,#aPrev,#aSkip,#aBack,#catToggle,#catClear,#catClear2,#progGen,#progSave,#detailBack,#detailFav,#qgo");
+  const t=e.target.closest("[data-open],[data-fav],[data-aopt],[data-tab],[data-go],[data-obj],[data-repas],[data-goal],[data-diet],[data-psex],[data-addtag],[data-untag],[data-course],[data-fmode],[data-fcount],[data-ffam],[data-fnutri],[data-msex],[data-macro],[data-sort],[data-meal],[data-own],[data-close],[data-auth],[data-star],[data-report],[data-cdel],[data-repphoto],[data-delphoto],[data-authprompt],[data-photofull],#revSubmit,#wSignup,#wLogin,#wGuest,#sugMore,#cropGo,#cropClose,#acctBtn,#openFilters,#openSort,#scrim,#aNext,#aPrev,#aSkip,#aBack,#catToggle,#catClear,#catClear2,#progGen,#progSave,#detailBack,#detailFav,#qgo");
   if(!t)return;
   if(t.dataset.fav!==undefined){const id=+t.dataset.fav;S.favs.has(id)?S.favs.delete(id):S.favs.add(id);LS.set("favs",[...S.favs]);
     t.setAttribute("aria-pressed",S.favs.has(id));t.querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.2:1.6);updateBadges();if(S.favs.has(id))nudgeAccount();e.stopPropagation();return;}
@@ -705,6 +720,7 @@ document.addEventListener("click",e=>{
   if(t.dataset.tab){setTab(t.dataset.tab);return;}
   if(t.dataset.meal!==undefined){const k=t.dataset.meal;S.meal.has(k)?S.meal.delete(k):S.meal.add(k);render();return;}
   if(t.id==="sugMore"){S.meal=new Set([daypart().m]);setTab("catalogue");window.scrollTo(0,0);return;}
+  if(t.dataset.own!==undefined){const k=t.dataset.own,had=S.owns.has(k);had?S.owns.delete(k):S.owns.add(k);LS.set("owns",[...S.owns]);renderDetail();if(!had)toast("Noté ! On adapte les suggestions à votre matériel.");return;}
   if(t.dataset.go==="frigo"){S.tab="assistant";S.astep=ASTEPS.length-1;render();window.scrollTo(0,0);return;}
   if(t.dataset.obj){S.obj=t.dataset.obj;render();return;}
   if(t.dataset.goal){S.prog.goal=t.dataset.goal;LS.set("prog",S.prog);render();return;}
