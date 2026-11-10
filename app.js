@@ -277,18 +277,39 @@ function menuCard(tab,icon,title,desc,feat,go){
     <span class="mt"><span class="t">${esc(title)}</span><span class="d">${esc(desc)}</span></span>
     <span class="ma">${ic("i-arrow",'ic',2)}</span></button>`;
 }
+function daypart(){const h=new Date().getHours();
+  if(h>=5&&h<10)return{m:"petit-dej",l:"Pour bien démarrer la journée"};
+  if(h>=10&&h<14)return{m:"dejeuner",l:"Des idées pour le déjeuner"};
+  if(h>=14&&h<18)return{m:"gouter",l:"Une pause gourmande ?"};
+  if(h>=18&&h<23)return{m:"diner",l:"Des idées pour ce soir"};
+  return{m:"diner",l:"Un petit creux ?"};}
+function suggestions(n){const d=daypart(),diets=foyerDiets();
+  let pool=R.filter(r=>r.img&&r.meal&&r.meal.includes(d.m)&&recipeMatchesAll(r,diets));
+  if(pool.length<n)pool=R.filter(r=>r.img&&r.meal&&r.meal.includes(d.m));
+  if(pool.length<n)pool=R.filter(r=>r.img);
+  const out=[],seen=new Set();let i=(S.seed*7)%Math.max(1,pool.length);
+  while(out.length<n&&seen.size<pool.length){const r=pool[i%pool.length];if(r&&!seen.has(r.id)){seen.add(r.id);out.push(r);}i++;}
+  return{label:d.l,recs:out};}
+function sugCard(r){return `<button class="sugcard" data-open="${r.id}" aria-label="${esc(r.title)}">
+    <span class="sph"><img src="${r.img}" alt="" loading="lazy" onerror="this.style.opacity=0"/></span>
+    <span class="sbody"><span class="st3">${esc(r.title)}</span>
+      <span class="smeta">${r.total} min · ${esc(r.diff)}${statOf(r).n?` · <span class="sr">★ ${statOf(r).avg.toFixed(1)}</span>`:""}</span></span></button>`;}
 function viewHome(){
   const sig=R.slice(0,6).map(cardHTML).join("");
+  const sug=suggestions(5);
   return `<section class="hero"><div class="img">
       <img src="img/hero-forneau.jpg" alt="Poêle en titane Maison Forneau" onerror="this.style.display='none'"/>
       <div class="cap"><div class="ey">Ô Forneau !</div><h1>Bien manger, simplement</h1>
         <div class="ctag">par Maison Forneau</div></div></div></section>
-    <p class="hsub">Les meilleures recettes virales des réseaux, réunies ici — réécrites, classées et adaptées à votre régime, votre appareil et votre foyer. Par où commencer&nbsp;?</p>
+    <p class="hsub">Les meilleures recettes virales des réseaux, réunies ici — réécrites, classées et adaptées à votre régime, votre appareil et votre foyer.</p>
+    ${sug.recs.length?`<div class="sechead" style="margin-top:2px"><h2>${esc(sug.label)}</h2><button class="clearbtn" id="sugMore">Autres idées</button></div>
+    <div class="sugstrip">${sug.recs.map(sugCard).join("")}</div>`:""}
+    <div class="proglabel" style="margin-top:22px">Par où commencer&nbsp;?</div>
     <div class="menugrid">
-      ${menuCard("programme","i-target","Mon programme nutritionnel","Un objectif, une journée de repas équilibrée.",true)}
-      ${menuCard("foyer","i-users","Pour qui je cuisine ?","Solo ou famille — quantités et nutrition adaptées.")}
-      ${menuCard("assistant","i-spark","Trouver une recette","Répondez à 4 questions, on vous propose.")}
+      ${menuCard("assistant","i-spark","Trouver une recette","Répondez à 4 questions, on vous propose vos plats.",true)}
       ${menuCard("catalogue","i-compass","Parcourir les recettes","Toutes les recettes, filtrées comme vous voulez.")}
+      ${menuCard("programme","i-target","Mon programme nutritionnel","Un objectif, une journée de repas équilibrée.")}
+      ${menuCard("foyer","i-users","Pour qui je cuisine ?","Solo ou famille — quantités et nutrition adaptées.")}
       ${menuCard(null,"i-fridge","Cuisiner avec mon frigo","Ce que vous pouvez faire, avec ce que vous avez.",false,"frigo")}
     </div>
     <div class="sechead"><h2>Recettes signature</h2><button class="clearbtn" data-tab="catalogue">Tout voir</button></div>
@@ -627,7 +648,8 @@ function handleVoice(t){const has=(...w)=>w.some(x=>t.includes(x));
   else if(has("fini","terminé","termine","c'est prêt","c'est bon")){cookAdvance();}}
 function cookAdvance(){if(!cookR)return;if(cookStep<cookR.steps.length-1){cookStep++;renderCook();speakStep();}else{finishCook();}}
 function startStepTimer(){if(!cookR)return;const s=cookR.steps[cookStep];if(s[1]&&s[1]>=60){$("#cookTimerWrap").hidden=false;if(!timerInt)$("#cookTimerBtn").click();speak("Minuteur lancé, "+Math.round(s[1]/60)+" minutes.");}else{speak("Cette étape n'a pas de minuteur.");vstat("Pas de minuteur pour cette étape.");}}
-function finishCook(){$("#cook").classList.remove("on");releaseWake();stopVoice();toast("Bon appétit");}
+function finishCook(){$("#cook").classList.remove("on");releaseWake();stopVoice();
+  setTimeout(()=>{if(curId!=null&&$("#detail").classList.contains("on")){const el=$(".avis");if(el){el.scrollIntoView({behavior:"smooth",block:"start"});toast("Bravo ! Comment s'est passée la recette ?");return;}}toast("Bon appétit !");},450);}
 function notifyTimer(){try{if("Notification"in window&&Notification.permission==="granted")new Notification("Ô Forneau !",{body:"Minuteur terminé — étape "+(cookStep+1)});}catch(e){}try{navigator.vibrate&&navigator.vibrate([200,120,200]);}catch(e){}}
 $("#cookTimerBtn").addEventListener("click",()=>{if(timerInt){stopTimer();return;}$("#cookTimerBtn").querySelector("span").textContent="Pause";
   timerInt=setInterval(()=>{if(timerLeft>0){timerLeft--;paintTimer();}else{stopTimer();toast("Minuteur terminé");notifyTimer();speak("Minuteur terminé.");}},1000);});
@@ -670,10 +692,10 @@ function render(){$$(".navitem,.bottomnav button").forEach(b=>b.setAttribute("ar
 
 /* ---------- événements ---------- */
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-open],[data-fav],[data-aopt],[data-tab],[data-go],[data-obj],[data-repas],[data-goal],[data-diet],[data-psex],[data-addtag],[data-untag],[data-course],[data-fmode],[data-fcount],[data-ffam],[data-fnutri],[data-msex],[data-macro],[data-sort],[data-meal],[data-close],[data-auth],[data-star],[data-report],[data-cdel],[data-repphoto],[data-delphoto],[data-authprompt],[data-photofull],#revSubmit,#wSignup,#wLogin,#wGuest,#acctBtn,#openFilters,#openSort,#scrim,#aNext,#aPrev,#aSkip,#aBack,#catToggle,#catClear,#catClear2,#progGen,#progSave,#detailBack,#detailFav,#qgo");
+  const t=e.target.closest("[data-open],[data-fav],[data-aopt],[data-tab],[data-go],[data-obj],[data-repas],[data-goal],[data-diet],[data-psex],[data-addtag],[data-untag],[data-course],[data-fmode],[data-fcount],[data-ffam],[data-fnutri],[data-msex],[data-macro],[data-sort],[data-meal],[data-close],[data-auth],[data-star],[data-report],[data-cdel],[data-repphoto],[data-delphoto],[data-authprompt],[data-photofull],#revSubmit,#wSignup,#wLogin,#wGuest,#sugMore,#cropGo,#cropClose,#acctBtn,#openFilters,#openSort,#scrim,#aNext,#aPrev,#aSkip,#aBack,#catToggle,#catClear,#catClear2,#progGen,#progSave,#detailBack,#detailFav,#qgo");
   if(!t)return;
   if(t.dataset.fav!==undefined){const id=+t.dataset.fav;S.favs.has(id)?S.favs.delete(id):S.favs.add(id);LS.set("favs",[...S.favs]);
-    t.setAttribute("aria-pressed",S.favs.has(id));t.querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.2:1.6);updateBadges();e.stopPropagation();return;}
+    t.setAttribute("aria-pressed",S.favs.has(id));t.querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.2:1.6);updateBadges();if(S.favs.has(id))nudgeAccount();e.stopPropagation();return;}
   if(t.dataset.open!==undefined){openDetail(+t.dataset.open);return;}
   if(t.dataset.aopt!==undefined){const k=t.dataset.aopt;
     if(k[0]==="t"&&/^\d+$/.test(k.slice(1))){const v=+k.slice(1);S.time=S.time===v?null:v;}
@@ -682,6 +704,7 @@ document.addEventListener("click",e=>{
     render();return;}
   if(t.dataset.tab){setTab(t.dataset.tab);return;}
   if(t.dataset.meal!==undefined){const k=t.dataset.meal;S.meal.has(k)?S.meal.delete(k):S.meal.add(k);render();return;}
+  if(t.id==="sugMore"){S.meal=new Set([daypart().m]);setTab("catalogue");window.scrollTo(0,0);return;}
   if(t.dataset.go==="frigo"){S.tab="assistant";S.astep=ASTEPS.length-1;render();window.scrollTo(0,0);return;}
   if(t.dataset.obj){S.obj=t.dataset.obj;render();return;}
   if(t.dataset.goal){S.prog.goal=t.dataset.goal;LS.set("prog",S.prog);render();return;}
@@ -697,6 +720,8 @@ document.addEventListener("click",e=>{
   if(t.id==="wSignup"){authMode="signup";hideWelcome();openAuth();return;}
   if(t.id==="wLogin"){authMode="login";hideWelcome();openAuth();return;}
   if(t.id==="wGuest"){try{localStorage.setItem("mf_guest","1");}catch(e){}hideWelcome();return;}
+  if(t.id==="cropGo"){authMode="signup";closeNudge();openAuth();return;}
+  if(t.id==="cropClose"){closeNudge();return;}
   if(t.id==="acctBtn"){openAuth();return;}
   if(t.dataset.auth){const a=t.dataset.auth;
     if(a==="toggle"){authMode=authMode==="signup"?"login":"signup";renderAuth();}
@@ -738,9 +763,9 @@ document.addEventListener("change",e=>{if(e.target.id==="revPhoto"){const f=e.ta
   else if(g==="time"){const n=+v;S.time=c.checked?n:(S.time===n?null:S.time);}
   render();});
 function editProg(el){const pf=el.closest("[data-pf]");if(!pf)return false;const f=pf.dataset.pf;
-  S.prog[f]=f==="act"?pf.value:(parseInt(pf.value,10)||0);LS.set("prog",S.prog);updateProgLive();return true;}
+  S.prog[f]=f==="act"?pf.value:(parseInt(pf.value,10)||0);LS.set("prog",S.prog);nudgeAccount();updateProgLive();return true;}
 function editMember(el){const mf=el.closest("[data-mf]");if(!mf)return false;const[i,field]=mf.dataset.mf.split(":");const m=S.foyer.members[+i];
-  if(m){m[field]=(field==="act"||field==="diet")?mf.value:(parseInt(mf.value,10)||0);LS.set("foyer",S.foyer);if(field==="diet"){render();}else{updateFoyerKcal();}}return true;}
+  if(m){m[field]=(field==="act"||field==="diet")?mf.value:(parseInt(mf.value,10)||0);LS.set("foyer",S.foyer);nudgeAccount();if(field==="diet"){render();}else{updateFoyerKcal();}}return true;}
 document.addEventListener("input",e=>{if(editProg(e.target))return;if(editMember(e.target))return;if(e.target.id==="q"){S.q=e.target.value;const list=filtered();
   const host=$(".catmain .list");if(host)host.innerHTML=list.length?list.map(cardHTML).join(""):`<div class="empty" style="grid-column:1/-1">${ic("i-compass",'ic')}<h3>Aucune recette</h3><p>Décochez un critère.</p></div>`;
   const cnt=$(".catmain .sechead .count b");if(cnt)cnt.textContent=list.length;}});
@@ -794,6 +819,10 @@ function openAuth(){if(!SB){toast("Comptes bientôt disponibles");return;}render
 function showWelcome(){const w=$("#welcome");if(w){w.hidden=false;document.body.style.overflow="hidden";}}
 function hideWelcome(){const w=$("#welcome");if(w){w.hidden=true;if(!$("#scrim").classList.contains("on")&&!$("#detail").classList.contains("on")&&!$("#cook").classList.contains("on"))document.body.style.overflow="";}}
 function maybeWelcome(){if(S.user)return;try{if(localStorage.getItem("mf_guest"))return;}catch(e){}showWelcome();}
+let nudgeT=null;
+function nudgeAccount(){if(!SB||S.user)return;try{if(sessionStorage.getItem("mf_nudged"))return;}catch(e){}
+  const b=$("#cropbar");if(!b)return;clearTimeout(nudgeT);nudgeT=setTimeout(()=>{b.hidden=false;requestAnimationFrame(()=>b.classList.add("on"));try{sessionStorage.setItem("mf_nudged","1");}catch(e){}},900);}
+function closeNudge(){const b=$("#cropbar");if(b){b.classList.remove("on");setTimeout(()=>{b.hidden=true;},260);}}
 function collectState(){return{favs:[...S.favs],pantry:[...S.pantry],cart:[...S.cart],foyer:S.foyer,prog:S.prog};}
 let cloudT=null;
 function saveCloud(){if(!S.user||!SB)return;clearTimeout(cloudT);cloudT=setTimeout(()=>{
