@@ -556,6 +556,23 @@ img{max-width:100%}
 .cookcta .cl{display:flex;flex-direction:column;line-height:1.16}
 .cookcta .cl b{font-size:15px;font-weight:600}
 .cookcta .cl small{font-size:11px;font-weight:500;opacity:.86}
+/* ---- Écran d'accueil Compte/Invité ---- */
+.welcome{position:fixed;inset:0;z-index:2000;display:flex;align-items:flex-end;justify-content:center}
+.welcome .wbg{position:absolute;inset:0;background:var(--greenDeep) url('img/hero-pan.jpg') center/cover no-repeat}
+.welcome .wbg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,58,34,.2) 0%,rgba(30,58,34,.55) 42%,rgba(18,32,20,.94) 100%)}
+.wcard{position:relative;z-index:1;width:100%;max-width:470px;padding:30px 24px calc(28px + env(safe-area-inset-bottom));color:#fff;text-align:center}
+.wbrand{font-family:var(--fD);letter-spacing:.14em;font-size:20px;font-weight:600}
+.wsub{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--champagne);margin-top:4px;opacity:.92}
+.wtitle{font-family:var(--fD);font-size:31px;font-weight:600;margin:18px 0 8px;text-wrap:balance;line-height:1.1}
+.wlead{font-size:14.5px;line-height:1.55;opacity:.93;margin:0 auto 16px;max-width:390px}
+.wfeat{list-style:none;padding:0;margin:0 auto 22px;max-width:330px;text-align:left;display:flex;flex-direction:column;gap:9px}
+.wfeat li{font-size:13.5px;padding-left:22px;position:relative;opacity:.96}
+.wfeat li::before{content:"";position:absolute;left:1px;top:6px;width:8px;height:8px;border-radius:999px;background:var(--goldGrad)}
+.wcta{display:flex;flex-direction:column;gap:10px}
+.wcta .btn{width:100%}
+.wguest{background:none;border:0;color:#fff;opacity:.88;font-size:14px;text-decoration:underline;text-underline-offset:3px;padding:10px;cursor:pointer}
+.wguest:hover{opacity:1}
+.wdisc{font-size:11.5px;opacity:.78;margin:14px 0 0;line-height:1.5}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -706,6 +723,26 @@ img{max-width:100%}
   </div>
 </div>
 
+<div class="welcome" id="welcome" hidden role="dialog" aria-modal="true" aria-label="Bienvenue">
+  <div class="wbg"></div>
+  <div class="wcard">
+    <div class="wbrand">Ô&nbsp;FORNEAU&nbsp;!</div>
+    <div class="wsub">Par Maison Forneau</div>
+    <h1 class="wtitle">Quoi cuisiner ce soir&nbsp;?</h1>
+    <p class="wlead">Les meilleures recettes virales des réseaux, réunies et réécrites — filtrées selon votre régime, vos appareils et votre temps.</p>
+    <ul class="wfeat">
+      <li>Favoris, frigo et liste de courses synchronisés</li>
+      <li>Programme nutritionnel sur mesure</li>
+      <li>Avis, notes et photos de la communauté</li>
+    </ul>
+    <div class="wcta">
+      <button class="btn" id="wSignup">Créer mon compte</button>
+      <button class="btn ghost" id="wLogin">J'ai déjà un compte</button>
+      <button class="wguest" id="wGuest">Continuer sans compte</button>
+    </div>
+    <p class="wdisc">Gratuit. Données hébergées dans l'Union européenne. Vous pourrez créer un compte à tout moment.</p>
+  </div>
+</div>
 <div id="toast"></div>
 <script>window.SB_URL="https://kbxguxcfcsyhktjyeihu.supabase.co";window.SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtieGd1eGNmY3N5aGt0anllaWh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxNjcyMzcsImV4cCI6MjEwOTc0MzIzN30.WlxWbBJis8GYtNeyrxN_FSjfNdYCThsw6C97OlgWrjU";</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
