@@ -592,6 +592,18 @@ img{max-width:100%}
 .cropbar .cx .btn{flex:1;min-height:42px;background:var(--goldGrad);color:#fff;border:0}
 .cropbar .cxc{background:rgba(255,255,255,.14);border:0;color:#fff;width:38px;height:38px;border-radius:999px;font-size:14px;cursor:pointer;flex:0 0 auto}
 @media (prefers-reduced-motion:reduce){.cropbar{transition:none}}
+/* ---- Bloc ustensile enrichi ---- */
+.product .tx .pbull{list-style:none;padding:0;margin:4px 0 0;display:flex;flex-direction:column;gap:3px}
+.product .tx .pbull li{font-size:12.5px;color:var(--muted);padding-left:14px;position:relative;line-height:1.35}
+.product .tx .pbull li::before{content:"";position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:999px;background:var(--gold)}
+.product .cta.owned{color:var(--green)}
+.product.owned{border-color:var(--green)}
+.ownchip{display:inline-flex;align-items:center;margin-top:9px;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;transition:border-color .14s,color .14s}
+.ownchip:hover{border-color:var(--lineGold);color:var(--green)}
+/* ---- Barre recherche + filtres sticky (catalogue) ---- */
+.catbar{position:sticky;top:57px;z-index:30;background:var(--paper);padding:10px 0 6px}
+.catbar .searchbar{margin:0 0 12px!important}
+.catbar .mealchips{margin-bottom:0}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
