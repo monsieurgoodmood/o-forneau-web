@@ -670,7 +670,7 @@ function render(){$$(".navitem,.bottomnav button").forEach(b=>b.setAttribute("ar
 
 /* ---------- événements ---------- */
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-open],[data-fav],[data-aopt],[data-tab],[data-go],[data-obj],[data-repas],[data-goal],[data-diet],[data-psex],[data-addtag],[data-untag],[data-course],[data-fmode],[data-fcount],[data-ffam],[data-fnutri],[data-msex],[data-macro],[data-sort],[data-meal],[data-close],[data-auth],[data-star],[data-report],[data-cdel],[data-repphoto],[data-delphoto],[data-authprompt],[data-photofull],#revSubmit,#acctBtn,#openFilters,#openSort,#scrim,#aNext,#aPrev,#aSkip,#aBack,#catToggle,#catClear,#catClear2,#progGen,#progSave,#detailBack,#detailFav,#qgo");
+  const t=e.target.closest("[data-open],[data-fav],[data-aopt],[data-tab],[data-go],[data-obj],[data-repas],[data-goal],[data-diet],[data-psex],[data-addtag],[data-untag],[data-course],[data-fmode],[data-fcount],[data-ffam],[data-fnutri],[data-msex],[data-macro],[data-sort],[data-meal],[data-close],[data-auth],[data-star],[data-report],[data-cdel],[data-repphoto],[data-delphoto],[data-authprompt],[data-photofull],#revSubmit,#wSignup,#wLogin,#wGuest,#acctBtn,#openFilters,#openSort,#scrim,#aNext,#aPrev,#aSkip,#aBack,#catToggle,#catClear,#catClear2,#progGen,#progSave,#detailBack,#detailFav,#qgo");
   if(!t)return;
   if(t.dataset.fav!==undefined){const id=+t.dataset.fav;S.favs.has(id)?S.favs.delete(id):S.favs.add(id);LS.set("favs",[...S.favs]);
     t.setAttribute("aria-pressed",S.favs.has(id));t.querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.2:1.6);updateBadges();e.stopPropagation();return;}
@@ -694,6 +694,9 @@ document.addEventListener("click",e=>{
   if(t.dataset.fnutri!==undefined){S.foyer.nutri=!S.foyer.nutri;LS.set("foyer",S.foyer);render();return;}
   if(t.dataset.msex){const[i,sx]=t.dataset.msex.split(":");if(S.foyer.members[+i]){S.foyer.members[+i].sexe=sx;LS.set("foyer",S.foyer);}render();return;}
   if(t.dataset.macro){macroMode=t.dataset.macro;renderDetail();return;}
+  if(t.id==="wSignup"){authMode="signup";hideWelcome();openAuth();return;}
+  if(t.id==="wLogin"){authMode="login";hideWelcome();openAuth();return;}
+  if(t.id==="wGuest"){try{localStorage.setItem("mf_guest","1");}catch(e){}hideWelcome();return;}
   if(t.id==="acctBtn"){openAuth();return;}
   if(t.dataset.auth){const a=t.dataset.auth;
     if(a==="toggle"){authMode=authMode==="signup"?"login":"signup";renderAuth();}
@@ -788,6 +791,9 @@ function renderAuth(){const body=$("#authBody");if(!body)return;$("#authTitle").
       ${s?`<p class="authdisc">En créant un compte, vous acceptez notre <a href="legal/privacy.html" target="_blank" rel="noopener">politique de confidentialité</a>. Vos données sont hébergées dans l'Union européenne.</p>`:""}
       <div class="authtoggle">${s?"Déjà un compte ?":"Pas encore de compte ?"} <button data-auth="toggle">${s?"Se connecter":"Créer un compte"}</button></div></div>`;}}
 function openAuth(){if(!SB){toast("Comptes bientôt disponibles");return;}renderAuth();openSheet("authSheet");}
+function showWelcome(){const w=$("#welcome");if(w){w.hidden=false;document.body.style.overflow="hidden";}}
+function hideWelcome(){const w=$("#welcome");if(w){w.hidden=true;if(!$("#scrim").classList.contains("on")&&!$("#detail").classList.contains("on")&&!$("#cook").classList.contains("on"))document.body.style.overflow="";}}
+function maybeWelcome(){if(S.user)return;try{if(localStorage.getItem("mf_guest"))return;}catch(e){}showWelcome();}
 function collectState(){return{favs:[...S.favs],pantry:[...S.pantry],cart:[...S.cart],foyer:S.foyer,prog:S.prog};}
 let cloudT=null;
 function saveCloud(){if(!S.user||!SB)return;clearTimeout(cloudT);cloudT=setTimeout(()=>{
@@ -801,7 +807,7 @@ function loadCloud(){const st=S.profile&&S.profile.app_state;if(!st||typeof st!=
   try{localStorage.setItem("mf_favs",JSON.stringify([...S.favs]));localStorage.setItem("mf_pantry",JSON.stringify([...S.pantry]));localStorage.setItem("mf_cart",JSON.stringify([...S.cart]));}catch{}
   render();updateBadges();}
 async function afterAuth(){try{const {data}=await SB.auth.getUser();S.user=data&&data.user||null;
-  if(S.user){const r=await SB.from("user_profiles").select("*").eq("id",S.user.id).maybeSingle();S.profile=r.data||null;loadCloud();loadMyRatings();}
+  if(S.user){const r=await SB.from("user_profiles").select("*").eq("id",S.user.id).maybeSingle();S.profile=r.data||null;loadCloud();loadMyRatings();hideWelcome();}
   updateAcct();}catch(e){}}
 async function doSignup(){const email=$("#auEmail").value.trim(),pass=$("#auPass").value,prenom=$("#auPrenom").value.trim();
   authErr("");if(!email||!pass)return authErr("E-mail et mot de passe requis.");if(!prenom)return authErr("Votre prénom, s'il vous plaît.");if(pass.length<6)return authErr("Mot de passe : 6 caractères minimum.");
@@ -895,6 +901,6 @@ async function reportPhoto(id){if(!S.user){openAuth();return;}await SB.rpc("repo
 async function delPhoto(id){if(!confirm("Supprimer votre photo ?"))return;const ph=(PHOTOS[R[curId].slug]||[]).find(p=>p.id===id);
   await SB.from("recipe_photos").delete().eq("id",id);if(ph){try{await SB.storage.from("dish-photos").remove([ph.path]);}catch(e){}}
   if(curId!=null){loadPhotos(R[curId].slug);refreshStat(R[curId].slug);}toast("Photo supprimée.");}
-if(SB){SB.auth.getSession().then(({data})=>{if(data&&data.session)afterAuth();});}
+if(SB){SB.auth.getSession().then(({data})=>{if(data&&data.session){afterAuth();}else{maybeWelcome();}}).catch(()=>maybeWelcome());}
 
 render();updateAcct();loadStats();
