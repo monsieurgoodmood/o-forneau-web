@@ -258,7 +258,8 @@ function cardHTML(r){
       <h3>${esc(r.title)}</h3>
       <span class="util">${ic(prod.i,'ic')}${esc(prod.n.replace(" Forneau","").replace(" titane",""))}</span>
       <div class="foot"><span class="m">${ic("i-clock",'ic')}<span class="tnum">${r.total} min</span></span>
-        <span class="sep"></span><span class="m">${ic("i-spark",'ic')}${esc(r.diff)}</span></div>
+        <span class="sep"></span><span class="m">${ic("i-spark",'ic')}${esc(r.diff)}</span>
+        ${statOf(r).n?`<span class="sep"></span><span class="m rate"><span class="stt">★</span><span class="tnum">${statOf(r).avg.toFixed(1)}</span></span>`:""}</div>
     </div></button>`;
 }
 function grid(list,emptyIcon,emptyH,emptyP,btnId,btnTxt){
@@ -556,7 +557,9 @@ function renderDetail(){const r=R[curId],k=curServ/r.serv,cov=coverage(r),P=[...
   const prodHTML=prod.have&&prod.h?`<a class="product" href="${SHOP}${prod.h}" target="_blank" rel="noopener">${prodInner}</a>`:`<div class="product gap">${prodInner}</div>`;
   $("#detailBody").innerHTML=`
     <div class="dcover"><img src="${r.img}" alt="${esc(r.title)}" onerror="this.style.opacity=0"/></div>
-    <h1 class="dtitle">${esc(r.title)}</h1><p class="dintro">${esc(r.intro)}</p>
+    <h1 class="dtitle">${esc(r.title)}</h1>
+    ${SB&&statOf(r).n?`<div class="drate">${starsRO(statOf(r).avg,17)}<span class="tnum">${statOf(r).avg.toFixed(1)}</span><small>${statOf(r).n} avis${statOf(r).c?" · "+statOf(r).c+" comm.":""}</small></div>`:""}
+    <p class="dintro">${esc(r.intro)}</p>
     <div class="dmetarow"><span class="pillmeta">${ic("i-clock",'ic')}<span class="tnum">${r.active} min actifs · ${r.total} min</span></span>
       ${r.appl.map(a=>`<span class="pillmeta">${ic(APPL[a].i,'ic')}${APPL[a].l}</span>`).join("")}
       <span class="pillmeta">${ic("i-spark",'ic')}${esc(r.diff)}</span></div>
@@ -582,7 +585,7 @@ function renderDetail(){const r=R[curId],k=curServ/r.serv,cov=coverage(r),P=[...
     <div class="section"><h2>Préparation</h2><div class="steps">${stepsHTML}</div></div>
     ${SB?avisHTML(r):""}
     <div class="cta-sticky"><button class="btn ghost" id="toCart2" style="flex:0 0 56px" aria-label="Courses">${ic("i-cart")}</button>
-      <button class="btn" id="startCook">${ic("i-play")}Mode cuisine</button></div>`;
+      <button class="btn cookcta" id="startCook">${ic("i-play")}<span class="cl"><b>Mode cuisine</b><small>Étapes guidées · minuteurs · vocal mains libres</small></span></button></div>`;
   $("#servMinus").onclick=()=>{if(curServ>1){curServ--;renderDetail();}};
   $("#servPlus").onclick=()=>{if(curServ<12){curServ++;renderDetail();}};
   $("#startCook").onclick=()=>startCook(curId);
