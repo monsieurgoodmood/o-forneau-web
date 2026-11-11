@@ -163,13 +163,13 @@ const GOALS={perte:{l:"Perte de poids",s:"déficit ~20 %",f:0.8,base:1600,i:"i-f
   masse:{l:"Prise de masse",s:"surplus ~15 %",f:1.15,base:2550,i:"i-spark"}};
 // Type d'alimentation : répartition des macros (% des kcal) + filtre recettes
 const DIETPLANS={
-  equilibre:{l:"Équilibré",P:25,L:30,G:45,i:"i-target"},
-  proteine:{l:"Hyperprotéiné",P:40,L:25,G:35,i:"i-flame",filter:"proteine"},
-  lowcarb:{l:"Low carb",P:30,L:45,G:25,i:"i-leaf",filter:"lowcarb"},
-  keto:{l:"Keto",P:25,L:70,G:5,i:"i-spark",filter:"keto"},
-  mediterraneen:{l:"Méditerranéen",P:20,L:35,G:45,i:"i-olive"},
-  vegetarien:{l:"Végétarien",P:22,L:30,G:48,i:"i-leaf",filter:"vegetarien"},
-  vegan:{l:"100 % végétal",P:20,L:30,G:50,i:"i-leaf",filter:"vegan"}};
+  equilibre:{l:"Équilibré",d:"Un peu de tout, sans excès",P:25,L:30,G:45,i:"i-target"},
+  proteine:{l:"Hyperprotéiné",d:"Plus de protéines, pour le muscle",P:40,L:25,G:35,i:"i-flame",filter:"proteine"},
+  lowcarb:{l:"Low carb",d:"Moins de féculents et de sucres",P:30,L:45,G:25,i:"i-leaf",filter:"lowcarb"},
+  keto:{l:"Keto",d:"Très peu de glucides, plus de bons gras",P:25,L:70,G:5,i:"i-spark",filter:"keto"},
+  mediterraneen:{l:"Méditerranéen",d:"Huile d'olive, légumes, poisson",P:20,L:35,G:45,i:"i-olive"},
+  vegetarien:{l:"Végétarien",d:"Sans viande ni poisson",P:22,L:30,G:48,i:"i-leaf",filter:"vegetarien"},
+  vegan:{l:"100 % végétal",d:"Sans aucun produit animal",P:20,L:30,G:50,i:"i-leaf",filter:"vegan"}};
 function carbShare(r){return r.macros?(r.macros.g*4)/Math.max(1,r.macros.kcal):1;}
 function protShare(r){return r.macros?(r.macros.p*4)/Math.max(1,r.macros.kcal):0;}
 function recipeMatchesDiet(r,diet){const f=(DIETPLANS[diet]||{}).filter;if(!f)return true;
@@ -354,7 +354,7 @@ function viewProgramme(){
   const sx=(v,lab)=>`<button type="button" data-psex="${v}" aria-pressed="${p.sexe===v}">${lab}</button>`;
   const acts=Object.entries(ACT).map(([k,v])=>`<option value="${k}" ${p.act===k?"selected":""}>${v.l}</option>`).join("");
   const goalSeg=Object.entries(GOALS).map(([k,v])=>`<button class="segb" role="button" aria-pressed="${p.goal===k}" data-goal="${k}">${ic(v.i)}<span>${esc(v.l)}</span><span class="k">${esc(v.s)}</span></button>`).join("");
-  const dietSeg=Object.entries(DIETPLANS).map(([k,v])=>`<button class="segb" role="button" aria-pressed="${p.diet===k}" data-diet="${k}">${ic(v.i)}<span>${esc(v.l)}</span><span class="k">P${v.P}·L${v.L}·G${v.G}</span></button>`).join("");
+  const dietSeg=Object.entries(DIETPLANS).map(([k,v])=>`<button class="segb" role="button" aria-pressed="${p.diet===k}" data-diet="${k}">${ic(v.i)}<span>${esc(v.l)}</span><span class="k">${esc(v.d||"")}</span></button>`).join("");
   const mealHTML=plan.map(x=>`<button class="meal" data-open="${x.r.id}">
       <span class="mph"><img src="${x.r.img}" alt="${esc(x.r.title)}" onerror="this.style.opacity=0"/></span>
       <span class="mx"><span class="ml">${esc(x.l)}</span><span class="mn">${esc(x.r.title)}</span>
@@ -391,9 +391,9 @@ function viewProgramme(){
         <button class="btn ghost" id="progGen" style="min-height:44px">${ic("i-swap")}Régénérer</button></div>
       <div class="bar"><i id="pgBar" style="width:${pct}%"></i></div>
       <div class="macro3">
-        <div class="m"><div class="v tnum">${tot.p} g</div><div class="k">Protéines <b class="tgtv" id="pgPt">/ ${T.P} g</b></div></div>
-        <div class="m"><div class="v tnum">${tot.l} g</div><div class="k">Lipides <b class="tgtv" id="pgLt">/ ${T.L} g</b></div></div>
-        <div class="m"><div class="v tnum">${tot.g} g</div><div class="k">Glucides <b class="tgtv" id="pgGt">/ ${T.G} g</b></div></div>
+        <div class="m"><div class="v tnum">${tot.p} g</div><div class="k">Protéines · muscles <b class="tgtv" id="pgPt">/ ${T.P} g</b></div></div>
+        <div class="m"><div class="v tnum">${tot.l} g</div><div class="k">Lipides · bons gras <b class="tgtv" id="pgLt">/ ${T.L} g</b></div></div>
+        <div class="m"><div class="v tnum">${tot.g} g</div><div class="k">Glucides · énergie <b class="tgtv" id="pgGt">/ ${T.G} g</b></div></div>
       </div></div>
 
     ${nF>1?`<p class="disclaim" style="margin-top:12px">Valeurs par personne. Pour ${nF} personnes, multipliez les quantités de chaque recette par ${nF}.</p>`:""}
