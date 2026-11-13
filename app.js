@@ -75,7 +75,7 @@ const R = [
   diets:["vegan","vegetarien","sans_lactose"],appl:["poele"],active:20,total:25,diff:"Intermédiaire",serv:2,
   ing:[[250,"g","pois chiches",{note:"égouttés"}],[1,"","oignon"],[2,"gousses","ail"],[1,"poignée","coriandre"],
        [1,"c. à c.","cumin",{staple:1,scalable:0}],[2,"c. à s.","farine",{note:"pois chiches"}],[2,"","galette",{note:"à wrap"}],
-       [3,"c. à s.","houmous"],[1,"poignée","salade"],[2,"c. à s.","huile d'olive",{staple:1}]],allerg:["gluten"],allerg_doute:[],
+       [3,"c. à s.","houmous"],[1,"poignée","salade"],[2,"c. à s.","huile d'olive",{staple:1}]],allerg:["gluten"],allerg_doute:["sesame"],
   titane:"Saisissez les falafels sans les bouger 3 minutes : la poêle titane forme une croûte qui les décolle seule quand elle est prête.",
   steps:[["Mixez pois chiches, oignon, ail, coriandre, cumin et farine en une pâte grossière. Façonnez des galets.",300],
          ["Saisissez-les 3 minutes par face dans la poêle titane huilée, sans les retourner trop tôt.",360],
@@ -86,7 +86,7 @@ const R = [
   intro:"La banane écrasée remplace une partie du sucre et garde les pancakes humides.",
   diets:["vegetarien"],appl:["poele"],active:10,total:15,diff:"Facile",serv:3,
   ing:[[2,"","banane",{note:"mûres"}],[150,"g","farine"],[200,"ml","lait"],[1,"","œuf"],
-       [1,"c. à c.","levure chimique",{staple:1,scalable:0}],[1,"c. à s.","sirop d'érable"],[1,"noix","beurre",{staple:1}]],allerg:["gluten","lait"],allerg_doute:[],
+       [1,"c. à c.","levure chimique",{staple:1,scalable:0}],[1,"c. à s.","sirop d'érable"],[1,"noix","beurre",{staple:1}]],allerg:["gluten","oeufs","lait"],allerg_doute:[],
   titane:"La poêle titane bien chaude puis à feu moyen cuit les pancakes sans beurre qui brûle : les bulles qui percent la surface disent qu'il faut retourner.",
   steps:[["Écrasez les bananes. Mélangez farine, levure, lait et œuf en une pâte lisse avec la banane.",180],
          ["Versez de petites louches dans la poêle titane chaude. Retournez quand les bulles percent.",240,1],
@@ -107,7 +107,7 @@ const R = [
   intro:"Sortez-les quand les bords sont pris mais le centre encore tendre : ils finissent sur la plaque.",
   diets:["vegetarien"],appl:["four"],active:12,total:22,diff:"Facile",serv:6,
   ing:[[150,"g","beurre de cacahuète"],[100,"g","sucre"],[1,"","œuf"],[120,"g","farine"],
-       [80,"g","chocolat noir",{note:"en morceaux"}],[1,"c. à c.","levure chimique",{staple:1,scalable:0}],[1,"pincée","sel",{staple:1,scalable:0}]],allerg:["gluten","arachides"],allerg_doute:["soja","lait"],
+       [80,"g","chocolat noir",{note:"en morceaux"}],[1,"c. à c.","levure chimique",{staple:1,scalable:0}],[1,"pincée","sel",{staple:1,scalable:0}]],allerg:["gluten","oeufs","arachides"],allerg_doute:["soja","lait"],
   titane:"Sur le plat titane, pas de papier cuisson nécessaire : la surface nue dore uniformément et libère les cookies sans accroche.",
   steps:[["Mélangez beurre de cacahuète, sucre et œuf. Incorporez farine, levure, sel et chocolat.",240],
          ["Formez des boules, espacez-les sur le plat. Four à 180 °C, 10 minutes.",600],
@@ -119,7 +119,7 @@ const R = [
   diets:["vegetarien"],appl:["four"],active:15,total:55,diff:"Facile",serv:8,
   ing:[[3,"","banane",{note:"très mûres"}],[200,"g","farine"],[100,"g","sucre"],[2,"","œuf"],
        [60,"g","beurre",{note:"fondu"}],[60,"g","noix de pécan"],[1,"c. à c.","levure chimique",{staple:1,scalable:0}],
-       [1,"c. à c.","cannelle",{staple:1,scalable:0}]],allerg:["gluten","lait","fruits_a_coque"],allerg_doute:[],
+       [1,"c. à c.","cannelle",{staple:1,scalable:0}]],allerg:["gluten","oeufs","lait","fruits_a_coque"],allerg_doute:[],
   titane:"Le moule titane conduit la chaleur régulièrement : la croûte se forme sans que le cœur ne sèche, et le cake se démoule net.",
   steps:[["Écrasez les bananes. Mélangez avec le beurre fondu, le sucre et les œufs.",180],
          ["Incorporez farine, levure et cannelle, puis les noix.",120],
@@ -141,7 +141,7 @@ const R = [
   intro:"Le pot de yaourt sert de mesure : simple, fiable, sans balance.",
   diets:["vegetarien","sans_gluten"],appl:["four"],active:10,total:40,diff:"Facile",serv:8,
   ing:[[1,"pot","yaourt nature"],[2,"pots","sucre"],[3,"pots","maïzena",{note:"ou farine de riz"}],[3,"","œuf"],
-       [0.5,"pot","huile neutre",{staple:1}],[1,"c. à c.","levure chimique",{staple:1,scalable:0}],[1,"","citron",{note:"zeste"}]],allerg:["gluten","lait"],allerg_doute:[],
+       [0.5,"pot","huile neutre",{staple:1}],[1,"c. à c.","levure chimique",{staple:1,scalable:0}],[1,"","citron",{note:"zeste"}]],allerg:["oeufs","lait"],allerg_doute:["gluten"],
   titane:"Le moule titane assure un démoulage net sans beurrer ni fariner : la surface inrayable n'attache pas.",
   steps:[["Versez le yaourt dans un saladier, rincez le pot. Ajoutez sucre, œufs, huile, zeste.",120],
          ["Incorporez maïzena et levure jusqu'à une pâte lisse.",60],
@@ -498,13 +498,13 @@ function viewAssistant(){
       <div class="cap"><div class="ey">Ô Forneau !</div><h1>Que cuisine-t-on&nbsp;?</h1>
         <div class="ctag">répondez, on vous propose</div></div></div></section>
     <section class="assistant">
-      <div class="asteps">${ASTEPS.map((_,i)=>`<span class="d ${i<=S.astep?'on':''}"></span>`).join("")}</div>
-      <div class="aq"><div class="n">${st.n}</div><h2>${esc(st.q)}</h2><p>${esc(st.p)}</p></div>
+      ${S.direct==="frigo"?"":`<div class="asteps">${ASTEPS.map((_,i)=>`<span class="d ${i<=S.astep?'on':''}"></span>`).join("")}</div>`}
+      <div class="aq"><div class="n">${S.direct==="frigo"?"Dans mon frigo":st.n}</div><h2>${esc(st.q)}</h2><p>${esc(st.p)}</p></div>
       ${opts?`<div class="aopts">${opts}</div>`:""}
       ${pantryBlock}
       <div class="anav">
         ${S.astep>0?`<button class="btn ghost" id="aPrev">${ic("i-back")}Précédent</button>`:`<button class="btn ghost" id="aSkip">Passer</button>`}
-        <button class="btn" id="aNext">${S.astep===ASTEPS.length-1?`Voir les ${count} recettes`:"Continuer"}${ic("i-arrow",'ic',2)}</button>
+        <button class="btn" id="aNext">${S.astep===ASTEPS.length-1?(S.pantry.size?"Voir mes idées":`Voir les ${count} recettes`):"Continuer"}${ic("i-arrow",'ic',2)}</button>
       </div></section>`;
 }
 function renderAPantry(){const t=$("#aPantryTags"),g=$("#aPantrySugg");if(!t)return;
@@ -673,7 +673,7 @@ function addTag(v){v=v.trim();if(v&&!S.pantry.has(v)){S.pantry.add(v);LS.set("pa
 function delTag(v){S.pantry.delete(v);LS.set("pantry",[...S.pantry]);renderAPantry();updateBadges();}
 
 /* ---------- nav / badges ---------- */
-function setTab(t){S.tab=t;if(t==="assistant")S.usePantry=S.pantry.size>0;render();window.scrollTo(0,0);}
+function setTab(t){S.direct=null;S.tab=t;if(t==="assistant")S.usePantry=S.pantry.size>0;render();window.scrollTo(0,0);}
 function courseItems(){const g={};const P=[...S.pantry].map(norm);
   R.filter(r=>S.favs.has(r.id)).forEach(r=>r.ing.filter(x=>!(x[3]&&x[3].staple)).forEach(x=>{const n=norm(x[2]);
     if(S.pantry.size&&P.some(p=>n.includes(p)||p.includes(n)))return;g[x[2]]=1;}));return g;}
@@ -726,7 +726,7 @@ document.addEventListener("click",e=>{
   if(t.dataset.meal!==undefined){const k=t.dataset.meal;S.meal.has(k)?S.meal.delete(k):S.meal.add(k);render();return;}
   if(t.id==="sugMore"){S.meal=new Set([daypart().m]);setTab("catalogue");window.scrollTo(0,0);return;}
   if(t.dataset.own!==undefined){const k=t.dataset.own,had=S.owns.has(k);had?S.owns.delete(k):S.owns.add(k);LS.set("owns",[...S.owns]);renderDetail();if(!had)toast("Noté ! On adapte les suggestions à votre matériel.");return;}
-  if(t.dataset.go==="frigo"){S.tab="assistant";S.astep=ASTEPS.length-1;render();window.scrollTo(0,0);return;}
+  if(t.dataset.go==="frigo"){S.tab="assistant";S.astep=ASTEPS.length-1;S.direct="frigo";render();window.scrollTo(0,0);return;}
   if(t.dataset.obj){S.obj=t.dataset.obj;render();return;}
   if(t.dataset.goal){S.prog.goal=t.dataset.goal;LS.set("prog",S.prog);render();return;}
   if(t.dataset.diet){S.prog.diet=t.dataset.diet;LS.set("prog",S.prog);render();return;}
