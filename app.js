@@ -368,9 +368,9 @@ function viewProgramme(){
     <div class="proglabel">Votre profil</div>
     <div class="pcard"><div class="flds">
       <div class="fld sex"><span>Sexe</span><div class="sexseg">${sx("f","Femme")}${sx("h","Homme")}</div></div>
-      <div class="fld"><span>Âge</span><input type="number" inputmode="numeric" min="1" max="120" value="${p.age||""}" data-pf="age" placeholder="30"/></div>
-      <div class="fld"><span>Taille</span><input type="number" inputmode="numeric" min="50" max="230" value="${p.taille||""}" data-pf="taille" placeholder="cm"/></div>
-      <div class="fld"><span>Poids</span><input type="number" inputmode="numeric" min="10" max="250" value="${p.poids||""}" data-pf="poids" placeholder="kg"/></div>
+      <label class="fld"><span>Âge</span><input type="number" inputmode="numeric" min="1" max="120" value="${p.age||""}" data-pf="age" placeholder="30"/></label>
+      <label class="fld"><span>Taille</span><input type="number" inputmode="numeric" min="50" max="230" value="${p.taille||""}" data-pf="taille" placeholder="cm"/></label>
+      <label class="fld"><span>Poids</span><input type="number" inputmode="numeric" min="10" max="250" value="${p.poids||""}" data-pf="poids" placeholder="kg"/></label>
       <div class="fld act"><span>Niveau d'activité</span><select data-pf="act">${acts}</select></div>
     </div><p class="disclaim" id="pgTdee" style="margin-top:10px">${T.tdee?`Dépense estimée ~${T.tdee} kcal/jour (Mifflin-St Jeor).`:"Renseignez taille et poids pour un calcul personnalisé."}</p></div>
 
@@ -422,9 +422,9 @@ function memberCard(m,i,solo){const kc=memberKcal(m);
       <span class="kc tnum" data-kc="${i}">${kc?`${kc} <small>kcal/j</small>`:""}</span></div>
     <div class="flds">
       <div class="fld sex"><span>Sexe</span><div class="sexseg">${sx("f","Femme")}${sx("h","Homme")}</div></div>
-      <div class="fld"><span>Âge</span><input type="number" inputmode="numeric" min="1" max="120" value="${m.age||""}" data-mf="${i}:age" placeholder="30"/></div>
-      <div class="fld"><span>Taille</span><input type="number" inputmode="numeric" min="50" max="230" value="${m.taille||""}" data-mf="${i}:taille" placeholder="cm"/></div>
-      <div class="fld"><span>Poids</span><input type="number" inputmode="numeric" min="10" max="250" value="${m.poids||""}" data-mf="${i}:poids" placeholder="kg"/></div>
+      <label class="fld"><span>Âge</span><input type="number" inputmode="numeric" min="1" max="120" value="${m.age||""}" data-mf="${i}:age" placeholder="30"/></label>
+      <label class="fld"><span>Taille</span><input type="number" inputmode="numeric" min="50" max="230" value="${m.taille||""}" data-mf="${i}:taille" placeholder="cm"/></label>
+      <label class="fld"><span>Poids</span><input type="number" inputmode="numeric" min="10" max="250" value="${m.poids||""}" data-mf="${i}:poids" placeholder="kg"/></label>
       <div class="fld act"><span>Activité</span><select data-mf="${i}:act">${acts}</select></div>
       <div class="fld act"><span>Régime</span><select data-mf="${i}:diet">${diets}</select></div>
     </div></div>`;}
@@ -690,9 +690,21 @@ function updateBadges(){const f=S.favs.size,c=Object.keys(courseItems()).length;
 function activeFilterCount(){return S.diets.size+S.appl.size+(S.time?1:0)+S.avoid.size;}
 function updateFilterCounts(){const n=activeFilterCount(),b=$("#fbCount");if(b){b.textContent=n;b.hidden=!n;}
   const c=$("#filterApplyCount");if(c)c.textContent=filtered().length;}
-function openSheet(id){$("#scrim").classList.add("on");$("#"+id).classList.add("on");document.body.style.overflow="hidden";}
-function closeSheets(){$("#scrim").classList.remove("on");$$(".sheet").forEach(s=>s.classList.remove("on"));
+let _ouvreurPanneau=null;
+// Un panneau ferme reste dans le DOM, simplement decale hors ecran. Sans `inert` il reste
+// lisible par les lecteurs d ecran et peut capter les clics destines a la page : c est ce
+// qui empechait les boutons Filtres et Trier de repondre sur telephone (tickets A14, A15).
+function openSheet(id){
+  _ouvreurPanneau=document.activeElement;
+  $("#scrim").classList.add("on");
+  const p=$("#"+id);
+  p.removeAttribute("inert");p.setAttribute("aria-hidden","false");p.classList.add("on");
+  document.body.style.overflow="hidden";
+  const premier=p.querySelector("h2,[data-close]");if(premier){premier.setAttribute("tabindex","-1");premier.focus({preventScroll:true});}
+}
+function closeSheets(){$("#scrim").classList.remove("on");$$(".sheet").forEach(s=>{s.classList.remove("on");s.setAttribute("inert","");s.setAttribute("aria-hidden","true");});
   if(!$("#detail").classList.contains("on"))document.body.style.overflow="";}
+  if(_ouvreurPanneau&&document.contains(_ouvreurPanneau)){_ouvreurPanneau.focus({preventScroll:true});_ouvreurPanneau=null;}
 function fillFilterSheet(){$("#filterSheetBody").innerHTML=filterGroups()+
   `<div style="margin-top:22px;display:flex;gap:10px"><button class="btn ghost" id="catClear2" style="flex:0 0 auto">Effacer</button>
    <button class="btn" data-close style="flex:1">Voir <span id="filterApplyCount" class="tnum">${filtered().length}</span> recettes</button></div>`;}
@@ -738,7 +750,7 @@ document.addEventListener("click",e=>{
   if(t.id==="wGuest"){try{localStorage.setItem("mf_guest","1");}catch(e){}hideWelcome();return;}
   if(t.id==="cropGo"){authMode="signup";closeNudge();openAuth();return;}
   if(t.id==="cropClose"){closeNudge();return;}
-  if(t.id==="acctBtn"){openAuth();return;}
+  if(t.id==="acctBtn"){if(!S.user)authMode="login";openAuth();return;}
   if(t.dataset.auth){const a=t.dataset.auth;
     if(a==="toggle"){authMode=authMode==="signup"?"login":"signup";renderAuth();}
     else if(a==="signup")doSignup();else if(a==="login")doLogin();else if(a==="logout")doLogout();
@@ -812,9 +824,9 @@ function renderAuth(){const body=$("#authBody");if(!body)return;$("#authTitle").
     body.innerHTML=`<div class="acctcard"><span class="av">${esc(acctInitial())}</span>
       <div class="who"><div class="nm">${esc(p.prenom||"Bienvenue")}</div><div class="em">${esc(S.user.email||"")}</div></div></div>
       <div class="authform">
-      <div class="fld"><span>Prénom</span><input id="apPrenom" value="${esc(p.prenom||"")}"/></div>
-      <div class="fld"><span>Nom <span class="opt">(facultatif)</span></span><input id="apNom" value="${esc(p.nom||"")}"/></div>
-      <div class="fld"><span>Téléphone <span class="opt">(facultatif)</span></span><input id="apTel" type="tel" value="${esc(p.telephone||"")}" placeholder="06…"/></div>
+      <label class="fld"><span>Prénom</span><input id="apPrenom" value="${esc(p.prenom||"")}"/></label>
+      <label class="fld"><span>Nom <span class="opt">(facultatif)</span></span><input id="apNom" value="${esc(p.nom||"")}"/></label>
+      <label class="fld"><span>Téléphone <span class="opt">(facultatif)</span></span><input id="apTel" type="tel" value="${esc(p.telephone||"")}" placeholder="06…"/></label>
       <label class="consent"><input type="checkbox" id="apConsent" ${p.marketing_consent?"checked":""}/><span>Je souhaite recevoir les recettes, offres et nouveautés de Maison Forneau par e-mail. Désinscription à tout moment.</span></label>
       <button class="btn" data-auth="save">${ic("i-check")}Enregistrer</button>
       <button class="btn ghost" data-auth="logout">Se déconnecter</button>
@@ -822,11 +834,11 @@ function renderAuth(){const body=$("#authBody");if(!body)return;$("#authTitle").
   }else{const s=authMode==="signup";
     body.innerHTML=`<p style="color:var(--muted);margin:0 0 14px;font-size:14px">${s?"Créez votre compte pour retrouver vos favoris et votre programme sur tous vos appareils.":"Connectez-vous pour retrouver vos favoris et votre programme."}</p>
       <div class="authform"><div class="autherr" id="authErr" hidden></div>
-      <div class="fld"><span>E-mail</span><input id="auEmail" type="email" autocomplete="email" placeholder="vous@exemple.com"/></div>
-      ${s?`<div class="fld"><span>Prénom</span><input id="auPrenom" autocomplete="given-name" placeholder="Prénom"/></div>
-      <div class="fld"><span>Nom <span class="opt">(facultatif)</span></span><input id="auNom" autocomplete="family-name"/></div>
-      <div class="fld"><span>Téléphone <span class="opt">(facultatif)</span></span><input id="auTel" type="tel" autocomplete="tel" placeholder="06…"/></div>`:""}
-      <div class="fld"><span>Mot de passe</span><input id="auPass" type="password" autocomplete="${s?"new-password":"current-password"}" placeholder="6 caractères min."/></div>
+      <label class="fld"><span>E-mail</span><input id="auEmail" type="email" autocomplete="email" placeholder="vous@exemple.com"/></label>
+      ${s?`<label class="fld"><span>Prénom</span><input id="auPrenom" autocomplete="given-name" placeholder="Prénom"/></label>
+      <label class="fld"><span>Nom <span class="opt">(facultatif)</span></span><input id="auNom" autocomplete="family-name"/></label>
+      <label class="fld"><span>Téléphone <span class="opt">(facultatif)</span></span><input id="auTel" type="tel" autocomplete="tel" placeholder="06…"/></label>`:""}
+      <label class="fld"><span>Mot de passe</span><input id="auPass" type="password" autocomplete="${s?"new-password":"current-password"}" placeholder="6 caractères min."/></label>
       ${s?`<label class="consent"><input type="checkbox" id="auConsent"/><span>Je souhaite recevoir les recettes, offres et nouveautés par e-mail. Facultatif, désinscription à tout moment.</span></label>`:""}
       <button class="btn" data-auth="${s?"signup":"login"}">${s?"Créer mon compte":"Se connecter"}</button>
       ${s?`<p class="authdisc">En créant un compte, vous acceptez notre <a href="legal/privacy.html" target="_blank" rel="noopener">politique de confidentialité</a>. Vos données sont hébergées dans l'Union européenne.</p>`:""}

@@ -680,32 +680,32 @@ img{max-width:100%}
   <button class="sortb" id="openSort"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#i-swap"/></svg>Trier</button>
 </div>
 
-<section class="sheet" id="filterSheet" role="dialog" aria-modal="true" aria-label="Filtres">
+<section class="sheet" id="filterSheet" inert aria-hidden="true" role="dialog" aria-modal="true" aria-label="Filtres">
   <div class="grip"></div>
   <div class="shead"><h2>Filtres</h2>
-    <button class="iconbtn" data-close><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><use href="#i-close"/></svg></button></div>
+    <button class="iconbtn" data-close aria-label="Fermer"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><use href="#i-close"/></svg></button></div>
   <div class="sbody" id="filterSheetBody"></div>
 </section>
 
-<section class="sheet" id="sortSheet" role="dialog" aria-modal="true" aria-label="Trier">
+<section class="sheet" id="sortSheet" inert aria-hidden="true" role="dialog" aria-modal="true" aria-label="Trier">
   <div class="grip"></div>
   <div class="shead"><h2>Trier les recettes</h2>
-    <button class="iconbtn" data-close><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><use href="#i-close"/></svg></button></div>
+    <button class="iconbtn" data-close aria-label="Fermer"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><use href="#i-close"/></svg></button></div>
   <div class="sbody" id="sortSheetBody"></div>
 </section>
 
-<section class="sheet" id="authSheet" role="dialog" aria-modal="true" aria-label="Mon compte">
+<section class="sheet" id="authSheet" inert aria-hidden="true" role="dialog" aria-modal="true" aria-label="Mon compte">
   <div class="grip"></div>
   <div class="shead"><h2 id="authTitle">Mon compte</h2>
-    <button class="iconbtn" data-close><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><use href="#i-close"/></svg></button></div>
+    <button class="iconbtn" data-close aria-label="Fermer"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><use href="#i-close"/></svg></button></div>
   <div class="sbody" id="authBody"></div>
 </section>
 
 <div class="scrim" id="scrim"></div>
-<section class="sheet" id="fridgeSheet" role="dialog" aria-modal="true" aria-label="Mon frigo">
+<section class="sheet" id="fridgeSheet" inert aria-hidden="true" role="dialog" aria-modal="true" aria-label="Mon frigo">
   <div class="grip"></div>
   <div class="shead"><h2>Mon frigo</h2>
-    <button class="iconbtn" data-close><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><use href="#i-close"/></svg></button></div>
+    <button class="iconbtn" data-close aria-label="Fermer"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><use href="#i-close"/></svg></button></div>
   <div class="sbody">
     <p style="color:var(--muted);margin:0 0 16px;font-size:14px">Déclarez ce que vous avez. On classe les recettes par taux de couverture.</p>
     <form class="pantryin" id="pantryForm" autocomplete="off">

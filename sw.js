@@ -1,4 +1,4 @@
-const CACHE = "forneau-v3";
+const CACHE = "forneau-v4";
 const CORE = ["./", "index.html", "app.js", "recipes_more.js", "manifest.webmanifest"];
 
 self.addEventListener("install", e => {
