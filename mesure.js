@@ -189,6 +189,21 @@
     // Relevés sur le DOM vivant, pas dans la source : ils sont posés dynamiquement.
     'close', 'fnutri'];
 
+  // La VALEUR d'un attribut ne part que si elle appartient au vocabulaire de l'app.
+  //
+  // Relevé dans la source : `data-untag` et `data-addtag` portent l'ingrédient TAPÉ par la
+  // personne, `data-course` aussi, et `data-photofull` l'adresse de sa photo. Les envoyer
+  // ferait sortir une donnée personnelle par une porte qu'on n'avait pas regardée.
+  // `data-cdel`, `data-report`, `data-delphoto` et `data-repphoto` portent l'identifiant
+  // d'un contenu d'utilisateur : inutile à la mesure, et il désigne quelqu'un.
+  //
+  // Liste BLANCHE, donc : ce qui n'y figure pas voit son action comptée et sa valeur
+  // jetée. Un attribut ajouté demain est muet par défaut — c'est le bon sens de la
+  // défaillance.
+  const VALEURS_SURES = new Set(['ga', 'tab', 'go', 'diet', 'meal', 'sort', 'goal', 'macro',
+    'repas', 'fmode', 'ffam', 'psex', 'msex', 'aopt', 'k', 'kc', 'pf', 'mf', 'fnutri',
+    'auth', 'authprompt', 'fcount', 'own', 'check', 'star', 'close', 'open', 'fav']);
+
   // L'étiquette visible d'un bouton est écrite par nous — sauf dans les zones de contenu
   // d'utilisateur (commentaires, photos), qu'on ne lit jamais.
   const ZONES_UTILISATEUR = '.avis, #avisList, #avisGallery, .cmt, .photo, textarea, input';
@@ -236,7 +251,11 @@
       if (cle) {
         const p = { ecran: ecranCourant, action: cle };
         const v = el.getAttribute('data-' + cle);
-        if (v) p.valeur = v.slice(0, 60);
+        // Deux conditions, pas une : la valeur doit être du vocabulaire de l'app ET
+        // l'élément ne doit pas se trouver dans une zone de contenu d'utilisateur.
+        if (v && VALEURS_SURES.has(cle) && !el.closest(ZONES_UTILISATEUR)) {
+          p.valeur = v.slice(0, 60);
+        }
         // data-ga-* reste possible pour préciser un cas particulier.
         for (const at of el.attributes) {
           if (at.name.startsWith('data-ga-')) p[at.name.slice(8).replace(/-/g, '_')] = at.value;
