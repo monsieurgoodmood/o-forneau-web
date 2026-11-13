@@ -2,6 +2,22 @@
 // non plus tant que la personne n'a pas accepté (voir mesure.js).
 const M=(e,p)=>{try{window.MFMesure&&window.MFMesure.suivre(e,p)}catch(_){}};
 const MEcran=(e,p)=>{try{window.MFMesure&&window.MFMesure.ecran(e,p)}catch(_){}};
+// Ce qu'on a le droit d'envoyer d'une recherche.
+//
+// Le champ de recherche accepte n'importe quoi, et quelqu'un y colle parfois son adresse
+// e-mail ou un numéro. Transmettre la saisie brute à Google ferait sortir une donnée
+// personnelle par une porte qu'on n'a pas prévue. On ne garde donc que ce qui ressemble à
+// un terme de cuisine : des lettres et des espaces, deux mots au plus, et rien qui porte
+// un @, un chiffre long ou un point.
+function termeMesurable(q){
+  const t=(q||"").trim().toLowerCase();
+  if(t.length<3||t.length>40) return null;
+  if(/[@_/\\]|\d{3,}|\.\w/.test(t)) return null;
+  if(!/^[a-zà-öø-ÿ'’ -]+$/.test(t)) return null;
+  if(t.split(/\s+/).length>5) return null;
+  return t;
+}
+
 "use strict";
 /* Ô Forneau ! — app recettes (démo), par Maison Forneau. Charte forneau.com (crème/vert/or, Playfair).
    Données exemple sans porc ni alcool, sans nom de chef, visuels propres. Deux surfaces :
@@ -827,7 +843,7 @@ function editProg(el){const pf=el.closest("[data-pf]");if(!pf)return false;const
   S.prog[f]=f==="act"?pf.value:(parseInt(pf.value,10)||0);LS.set("prog",S.prog);nudgeAccount();updateProgLive();return true;}
 function editMember(el){const mf=el.closest("[data-mf]");if(!mf)return false;const[i,field]=mf.dataset.mf.split(":");const m=S.foyer.members[+i];
   if(m){m[field]=(field==="act"||field==="diet")?mf.value:(parseInt(mf.value,10)||0);LS.set("foyer",S.foyer);nudgeAccount();if(field==="diet"){render();}else{updateFoyerKcal();}}return true;}
-document.addEventListener("input",e=>{if(editProg(e.target))return;if(editMember(e.target))return;if(e.target.id==="q"){S.q=e.target.value;const list=filtered();clearTimeout(window.__mq);window.__mq=setTimeout(()=>{if(S.q.trim().length>2)M("recherche",{terme:S.q.trim().toLowerCase().slice(0,60),resultats:list.length})},900);
+document.addEventListener("input",e=>{if(editProg(e.target))return;if(editMember(e.target))return;if(e.target.id==="q"){S.q=e.target.value;const list=filtered();clearTimeout(window.__mq);window.__mq=setTimeout(()=>{const t=termeMesurable(S.q);if(t)M("recherche",{terme:t,resultats:list.length,longueur:S.q.trim().length})},900);
   const host=$(".catmain .list");if(host)host.innerHTML=list.length?list.map(cardHTML).join(""):`<div class="empty" style="grid-column:1/-1">${ic("i-compass",'ic')}<h3>Aucune recette</h3><p>Décochez un critère.</p></div>`;
   const cnt=$(".catmain .sechead .count b");if(cnt)cnt.textContent=list.length;}});
 document.addEventListener("submit",e=>{if(e.target.id==="aPantryForm"){e.preventDefault();const i=$("#aPantryInput");addTag(i.value);i.value="";i.focus();}});

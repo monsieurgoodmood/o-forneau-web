@@ -77,14 +77,38 @@
     s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(ID_MESURE);
     document.head.appendChild(s);
 
+    autorise = true;
     const attendait = file; file = [];
     for (const [nom, p] of attendait) envoyer(nom, p);
   }
 
+  // Drapeau vivant, relu à CHAQUE envoi. `pret` dit seulement que gtag est chargé ; il ne
+  // dit pas que la personne est toujours d'accord. Sans ce drapeau, un refus prononcé après
+  // une acceptation ne prenait effet qu'au rechargement suivant : la mesure continuait.
+  let autorise = false;
+
   function envoyer(nom, params) {
     if (!ID_MESURE) return;
-    if (!pret) { if (file.length < 60) file.push([nom, params]); return; }
+    if (!autorise) { if (!pret && file.length < 60) file.push([nom, params]); return; }
     try { gtag('event', nom, params || {}); } catch (_) {}
+  }
+
+  /** Coupe la mesure sur-le-champ : plus un événement, et le consentement est révoqué
+   *  auprès de gtag, qui efface alors ses identifiants. */
+  function couper() {
+    autorise = false;
+    file = [];
+    if (pret) { try { gtag('consent', 'update', { analytics_storage: 'denied' }); } catch (_) {} }
+    // Les cookies posés par gtag sont supprimés : un refus doit effacer, pas seulement taire.
+    try {
+      for (const c of document.cookie.split(';')) {
+        const n = c.split('=')[0].trim();
+        if (/^_ga/.test(n)) {
+          document.cookie = n + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+          document.cookie = n + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.' + location.hostname;
+        }
+      }
+    } catch (_) {}
   }
 
   // ── API publique ──────────────────────────────────────────────────────────────────
@@ -99,8 +123,14 @@
       ecranCourant = nom;
       debutEcran = Date.now();
       profondeur = 0;
+      // JAMAIS `location.href`. Supabase dépose le jeton de session dans le fragment
+      // d'URL après un lien de confirmation (#access_token=…) : envoyer l'adresse brute
+      // aurait transmis ce jeton à Google. On reconstruit une adresse propre à partir de
+      // l'origine, du chemin, et du nom d'écran — jamais du fragment ni de la requête.
       envoyer('page_view', Object.assign({
-        page_title: nom, page_location: location.href, page_path: '/' + nom,
+        page_title: nom,
+        page_location: location.origin + location.pathname + '#/' + nom,
+        page_path: '/' + nom,
       }, nettoyer(extra)));
     },
 
@@ -108,7 +138,7 @@
     consentement: choix,
 
     /** Rouvre la question (lien « Gérer la mesure d'audience » des mentions légales). */
-    redemander() { try { localStorage.removeItem(CLE); } catch (_) {} banniere(); },
+    redemander() { try { localStorage.removeItem(CLE); } catch (_) {} couper(); banniere(); },
   };
 
   // Les paramètres sont filtrés : rien qui ressemble à une identité ne part.
@@ -197,7 +227,7 @@
       '<a class="mcl" href="/legal/privacy.html">Notre politique de confidentialité</a>';
     document.body.appendChild(d);
     requestAnimationFrame(() => d.classList.add('on'));
-    const fermer = (ok) => { garder(ok); d.classList.remove('on'); setTimeout(() => d.remove(), 240); if (ok) charger(); else file = []; };
+    const fermer = (ok) => { garder(ok); d.classList.remove('on'); setTimeout(() => d.remove(), 240); if (ok) charger(); else couper(); };
     d.querySelector('#mcOui').addEventListener('click', () => fermer(true));
     d.querySelector('#mcNon').addEventListener('click', () => fermer(false));
   }
