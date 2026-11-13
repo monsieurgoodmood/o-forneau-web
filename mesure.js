@@ -324,6 +324,21 @@
       .slice(0, 120);
   }
 
+  // `e.filename` n'est pas toujours un fichier. Pour une erreur levée dans un script EN
+  // LIGNE, c'est l'adresse du DOCUMENT — donc avec son fragment, donc avec le jeton de
+  // session que Supabase y dépose après un lien de confirmation. Couper sur « / » ne
+  // suffisait pas : `#access_token=…` serait parti tel quel. On ne garde que le dernier
+  // segment du CHEMIN, en jetant requête et fragment.
+  function fichierSeul(f) {
+    if (!f) return '—';
+    try {
+      const u = new URL(f, location.href);
+      return (u.pathname.split('/').pop() || 'document').slice(0, 40);
+    } catch (_) {
+      return String(f).split(/[?#]/)[0].split('/').pop().slice(0, 40) || '—';
+    }
+  }
+
   function signaler(type, message, ou) {
     const propre = nettoyerMessage(message);
     const cle = type + '|' + propre + '|' + ou;
@@ -335,7 +350,9 @@
       description: `${type}: ${propre}`,
       fatal: 0,                      // la page survit : ce n'est pas un plantage d'app
       ecran: ecranCourant,
-      ou: String(ou || '—').slice(0, 80),
+      // Deuxième filet : même nettoyage que le message, au cas où un futur appelant
+      // passerait ici autre chose qu'un nom de fichier.
+      ou: nettoyerMessage(ou).slice(0, 80),
     });
   }
 
@@ -353,8 +370,8 @@
         return;
       }
       const err = e.error;
-      const ou = `${(e.filename || '').split('/').pop()}:${e.lineno || 0}`;
-      signaler(err && err.name ? err.name : 'Error', (err && err.message) || e.message, ou);
+      signaler(err && err.name ? err.name : 'Error', (err && err.message) || e.message,
+               `${fichierSeul(e.filename)}:${e.lineno || 0}`);
     }, true);   // en capture : les erreurs de ressource ne remontent pas en phase de bulle
 
     // Une promesse rejetée sans `catch` ne déclenche PAS `error`. C'est le cas le plus
