@@ -294,6 +294,75 @@
     // Le temps du dernier écran doit partir même si l'onglet est fermé.
     addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') finirEcran(); });
     addEventListener('pagehide', finirEcran);
+
+    brancherErreurs();
+  }
+
+  // ── Erreurs JavaScript ────────────────────────────────────────────────────────────
+  //
+  // Le web n'avait AUCUN suivi d'erreur : une exception cassait l'écran de quelqu'un et
+  // personne ne l'apprenait jamais. Google Play nous dit ce qui plante dans l'app native ;
+  // il n'existait pas d'équivalent ici.
+  //
+  // On ne pose pas de mouchard tiers pour autant — pas de Sentry, pas de kit externe. GA4
+  // reçoit l'événement `exception`, qui est sa convention pour cela, par le même chemin et
+  // sous le même consentement que le reste.
+  //
+  // Le message d'une exception peut contenir n'importe quoi, y compris une donnée que
+  // l'utilisateur a saisie. Il est donc nettoyé avant de partir, et on garde surtout le
+  // TYPE et l'ENDROIT, qui sont ce dont on a besoin pour corriger.
+  const dejaVues = new Set();
+
+  function nettoyerMessage(m) {
+    return String(m || 'erreur inconnue')
+      .replace(/[\w.+-]+@[\w.-]+/g, '‹adresse›')        // une adresse e-mail dans un message
+      .replace(/\b\d{6,}\b/g, '‹nombre›')                // un identifiant, un numéro
+      .replace(/(eyJ|sk_|pk_|apify_|appl_|goog_)[A-Za-z0-9._-]{8,}/g, '‹jeton›')
+      .replace(/https?:\/\/[^\s)]+/g, (u) => {             // une adresse, sans sa requête
+        try { const x = new URL(u); return x.origin + x.pathname; } catch (_) { return '‹url›'; }
+      })
+      .slice(0, 120);
+  }
+
+  function signaler(type, message, ou) {
+    const propre = nettoyerMessage(message);
+    const cle = type + '|' + propre + '|' + ou;
+    // Une boucle de rendu peut lever mille fois la même erreur : on ne la compte qu'une
+    // fois par visite, sinon elle noie tout le reste et fait exploser le quota d'événements.
+    if (dejaVues.has(cle) || dejaVues.size > 20) return;
+    dejaVues.add(cle);
+    envoyer('exception', {
+      description: `${type}: ${propre}`,
+      fatal: 0,                      // la page survit : ce n'est pas un plantage d'app
+      ecran: ecranCourant,
+      ou: String(ou || '—').slice(0, 80),
+    });
+  }
+
+  function brancherErreurs() {
+    addEventListener('error', (e) => {
+      // Deux choses très différentes arrivent par le même événement.
+      const cible = e.target;
+      if (cible && cible !== window && (cible.tagName === 'IMG' || cible.tagName === 'SCRIPT' ||
+          cible.tagName === 'LINK' || cible.tagName === 'SOURCE')) {
+        // Une ressource qui ne charge pas : image manquante, script bloqué. Utile à savoir —
+        // c'est ainsi qu'on apprend qu'une photo de recette a disparu du dépôt.
+        let src = '';
+        try { src = new URL(cible.currentSrc || cible.src || cible.href, location.href).pathname; } catch (_) {}
+        signaler('ressource', cible.tagName.toLowerCase(), src.slice(-60));
+        return;
+      }
+      const err = e.error;
+      const ou = `${(e.filename || '').split('/').pop()}:${e.lineno || 0}`;
+      signaler(err && err.name ? err.name : 'Error', (err && err.message) || e.message, ou);
+    }, true);   // en capture : les erreurs de ressource ne remontent pas en phase de bulle
+
+    // Une promesse rejetée sans `catch` ne déclenche PAS `error`. C'est le cas le plus
+    // courant dans cette app, où tout appel réseau est une promesse.
+    addEventListener('unhandledrejection', (e) => {
+      const r = e.reason;
+      signaler('PromesseRejetée', (r && (r.message || r.toString())) || 'sans raison', '—');
+    });
   }
 
   /// Quelle recette est à l'écran, ou sous le doigt ? Sans ce rattachement, « a cliqué sur
