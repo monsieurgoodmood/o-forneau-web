@@ -8,7 +8,7 @@ const DIETS = { vegan:{l:"100 % végétale",s:"Végétale"}, vegetarien:{l:"Vég
 const APPL = { poele:{l:"Poêle",i:"i-pan"}, four:{l:"Four",i:"i-oven"}, airfryer:{l:"Airfryer",i:"i-air"},
   micro_ondes:{l:"Micro-ondes",i:"i-micro"}, blender:{l:"Blender",i:"i-blend"}, sans_cuisson:{l:"Sans cuisson",i:"i-nocook"} };
 const TIMES = [{v:10,l:"10 min"},{v:20,l:"20 min"},{v:30,l:"30 min"},{v:45,l:"45 min"},{v:60,l:"60 min"}];
-const ALLERG = { gluten:{l:"Gluten"}, lactose:{l:"Lactose"}, fruits_coque:{l:"Fruits à coque"}, oeuf:{l:"Œuf"}, soja:{l:"Soja"} };
+const ALLERG = { gluten:{l:"Gluten"}, crustaces:{l:"Crustacés"}, oeufs:{l:"Œufs"}, poissons:{l:"Poissons"}, arachides:{l:"Arachides"}, soja:{l:"Soja"}, lait:{l:"Lait"}, fruits_a_coque:{l:"Fruits à coque"}, celeri:{l:"Céleri"}, moutarde:{l:"Moutarde"}, sesame:{l:"Sésame"}, sulfites:{l:"Sulfites"}, lupin:{l:"Lupin"}, mollusques:{l:"Mollusques"} };
 
 const SHOP="https://forneau.com/products/";
 const PRODUCTS = {
@@ -39,7 +39,7 @@ const R = [
   diets:["vegan","vegetarien","sans_gluten","sans_lactose"],appl:["poele"],active:10,total:25,diff:"Facile",serv:4,
   ing:[[400,"g","pois chiches",{note:"égouttés"}],[400,"ml","lait de coco"],[2,"poignées","épinards"],[1,"","oignon"],
        [2,"gousses","ail"],[1,"c. à s.","curry",{staple:1,scalable:0}],[1,"c. à c.","cumin",{staple:1,scalable:0}],
-       [1,"","citron"],[2,"c. à s.","huile d'olive",{staple:1}],[1,"pincée","sel",{staple:1,scalable:0}]],
+       [1,"","citron"],[2,"c. à s.","huile d'olive",{staple:1}],[1,"pincée","sel",{staple:1,scalable:0}]],allerg:[],allerg_doute:[],
   titane:"À sec dans la poêle titane bien chaude, nacrez les épices 30 secondes avant tout corps gras : le métal nu diffuse une chaleur vive et régulière qui les torréfie sans les brûler.",
   steps:[["Émincez l'oignon et l'ail. Dans la poêle titane à feu moyen, faites-les suer 3 minutes dans l'huile.",180],
          ["Poussez-les sur un bord, versez curry et cumin sur le métal nu, remuez 30 secondes jusqu'au parfum.",30,1],
@@ -51,7 +51,7 @@ const R = [
   intro:"Un bol d'assemblage : la sauce tahini-citron lie des textures qui restent distinctes.",
   diets:["vegan","vegetarien","sans_gluten","sans_lactose"],appl:["sans_cuisson"],active:15,total:15,diff:"Facile",serv:2,
   ing:[[150,"g","quinoa",{note:"cuit"}],[1,"","avocat"],[200,"g","pois chiches",{note:"rôtis"}],[1,"","carotte",{note:"râpée"}],
-       [2,"c. à s.","tahini"],[1,"","citron"],[1,"poignée","roquette"],[1,"c. à s.","graines de courge"],[1,"pincée","sel",{staple:1,scalable:0}]],
+       [2,"c. à s.","tahini"],[1,"","citron"],[1,"poignée","roquette"],[1,"c. à s.","graines de courge"],[1,"pincée","sel",{staple:1,scalable:0}]],allerg:["sesame"],allerg_doute:[],
   titane:"Sur la planche titane, taillez l'avocat et la carotte au dernier moment : la surface inrayable n'emprisonne ni odeur ni bactérie, l'assemblage reste net.",
   steps:[["Fouettez le tahini avec le jus de citron et deux cuillères d'eau jusqu'à une sauce nappante.",60],
          ["Répartissez le quinoa au fond des bols. Disposez avocat, pois chiches, carotte et roquette par zones.",120],
@@ -63,7 +63,7 @@ const R = [
   diets:["vegan","vegetarien","sans_gluten","sans_lactose","hypocalorique"],appl:["poele"],active:10,total:30,diff:"Facile",serv:4,
   ing:[[250,"g","lentilles corail"],[400,"ml","lait de coco"],[1,"","oignon"],[2,"gousses","ail"],
        [1,"c. à c.","curcuma",{staple:1,scalable:0}],[1,"c. à c.","cumin",{staple:1,scalable:0}],[1,"","tomate"],
-       [600,"ml","eau",{staple:1}],[1,"pincée","sel",{staple:1,scalable:0}]],
+       [600,"ml","eau",{staple:1}],[1,"pincée","sel",{staple:1,scalable:0}]],allerg:[],allerg_doute:[],
   titane:"Déglacez le fond de la poêle titane avec un peu d'eau dès que les épices accrochent : le métal nu libère les sucs sans qu'ils attachent.",
   steps:[["Suez l'oignon et l'ail 3 minutes. Ajoutez curcuma et cumin, remuez 30 secondes.",180,1],
          ["Versez lentilles, tomate concassée, eau et lait de coco. Portez à frémissement.",60],
@@ -75,7 +75,7 @@ const R = [
   diets:["vegan","vegetarien","sans_lactose"],appl:["poele"],active:20,total:25,diff:"Intermédiaire",serv:2,
   ing:[[250,"g","pois chiches",{note:"égouttés"}],[1,"","oignon"],[2,"gousses","ail"],[1,"poignée","coriandre"],
        [1,"c. à c.","cumin",{staple:1,scalable:0}],[2,"c. à s.","farine",{note:"pois chiches"}],[2,"","galette",{note:"à wrap"}],
-       [3,"c. à s.","houmous"],[1,"poignée","salade"],[2,"c. à s.","huile d'olive",{staple:1}]],
+       [3,"c. à s.","houmous"],[1,"poignée","salade"],[2,"c. à s.","huile d'olive",{staple:1}]],allerg:["gluten"],allerg_doute:[],
   titane:"Saisissez les falafels sans les bouger 3 minutes : la poêle titane forme une croûte qui les décolle seule quand elle est prête.",
   steps:[["Mixez pois chiches, oignon, ail, coriandre, cumin et farine en une pâte grossière. Façonnez des galets.",300],
          ["Saisissez-les 3 minutes par face dans la poêle titane huilée, sans les retourner trop tôt.",360],
@@ -86,7 +86,7 @@ const R = [
   intro:"La banane écrasée remplace une partie du sucre et garde les pancakes humides.",
   diets:["vegetarien"],appl:["poele"],active:10,total:15,diff:"Facile",serv:3,
   ing:[[2,"","banane",{note:"mûres"}],[150,"g","farine"],[200,"ml","lait"],[1,"","œuf"],
-       [1,"c. à c.","levure chimique",{staple:1,scalable:0}],[1,"c. à s.","sirop d'érable"],[1,"noix","beurre",{staple:1}]],
+       [1,"c. à c.","levure chimique",{staple:1,scalable:0}],[1,"c. à s.","sirop d'érable"],[1,"noix","beurre",{staple:1}]],allerg:["gluten","lait"],allerg_doute:[],
   titane:"La poêle titane bien chaude puis à feu moyen cuit les pancakes sans beurre qui brûle : les bulles qui percent la surface disent qu'il faut retourner.",
   steps:[["Écrasez les bananes. Mélangez farine, levure, lait et œuf en une pâte lisse avec la banane.",180],
          ["Versez de petites louches dans la poêle titane chaude. Retournez quand les bulles percent.",240,1],
@@ -97,7 +97,7 @@ const R = [
   intro:"Deux minutes au micro-ondes, en surveillant le débordement : remuez à mi-cuisson.",
   diets:["vegetarien","sans_lactose"],appl:["micro_ondes"],active:5,total:10,diff:"Facile",serv:1,
   ing:[[50,"g","farine d'avoine",{note:"flocons"}],[200,"ml","lait",{note:"végétal"}],[1,"","pomme"],
-       [1,"c. à c.","cannelle",{staple:1,scalable:0}],[1,"c. à c.","sirop d'érable"],[1,"c. à s.","noix de pécan"]],
+       [1,"c. à c.","cannelle",{staple:1,scalable:0}],[1,"c. à c.","sirop d'érable"],[1,"c. à s.","noix de pécan"]],allerg:["gluten","fruits_a_coque"],allerg_doute:[],
   titane:"Dans le bol titane, le porridge chauffe uniformément et se mange dans le même contenant : rien ne colle, rien ne se transfère.",
   steps:[["Mélangez flocons et lait végétal dans le bol. Micro-ondes 2 minutes, en remuant à mi-parcours.",120,1],
          ["Ajoutez la pomme en dés, la cannelle, le sirop et les noix.",60]],
@@ -107,7 +107,7 @@ const R = [
   intro:"Sortez-les quand les bords sont pris mais le centre encore tendre : ils finissent sur la plaque.",
   diets:["vegetarien"],appl:["four"],active:12,total:22,diff:"Facile",serv:6,
   ing:[[150,"g","beurre de cacahuète"],[100,"g","sucre"],[1,"","œuf"],[120,"g","farine"],
-       [80,"g","chocolat noir",{note:"en morceaux"}],[1,"c. à c.","levure chimique",{staple:1,scalable:0}],[1,"pincée","sel",{staple:1,scalable:0}]],
+       [80,"g","chocolat noir",{note:"en morceaux"}],[1,"c. à c.","levure chimique",{staple:1,scalable:0}],[1,"pincée","sel",{staple:1,scalable:0}]],allerg:["gluten","arachides"],allerg_doute:["soja","lait"],
   titane:"Sur le plat titane, pas de papier cuisson nécessaire : la surface nue dore uniformément et libère les cookies sans accroche.",
   steps:[["Mélangez beurre de cacahuète, sucre et œuf. Incorporez farine, levure, sel et chocolat.",240],
          ["Formez des boules, espacez-les sur le plat. Four à 180 °C, 10 minutes.",600],
@@ -119,7 +119,7 @@ const R = [
   diets:["vegetarien"],appl:["four"],active:15,total:55,diff:"Facile",serv:8,
   ing:[[3,"","banane",{note:"très mûres"}],[200,"g","farine"],[100,"g","sucre"],[2,"","œuf"],
        [60,"g","beurre",{note:"fondu"}],[60,"g","noix de pécan"],[1,"c. à c.","levure chimique",{staple:1,scalable:0}],
-       [1,"c. à c.","cannelle",{staple:1,scalable:0}]],
+       [1,"c. à c.","cannelle",{staple:1,scalable:0}]],allerg:["gluten","lait","fruits_a_coque"],allerg_doute:[],
   titane:"Le moule titane conduit la chaleur régulièrement : la croûte se forme sans que le cœur ne sèche, et le cake se démoule net.",
   steps:[["Écrasez les bananes. Mélangez avec le beurre fondu, le sucre et les œufs.",180],
          ["Incorporez farine, levure et cannelle, puis les noix.",120],
@@ -130,7 +130,7 @@ const R = [
   intro:"Le sable ne se travaille pas trop : des morceaux irréguliers donnent le croustillant.",
   diets:["vegetarien"],appl:["four"],active:15,total:45,diff:"Facile",serv:6,
   ing:[[6,"","pomme"],[120,"g","farine"],[80,"g","sucre"],[80,"g","beurre",{note:"froid"}],
-       [50,"g","farine d'avoine",{note:"flocons"}],[1,"c. à c.","cannelle",{staple:1,scalable:0}]],
+       [50,"g","farine d'avoine",{note:"flocons"}],[1,"c. à c.","cannelle",{staple:1,scalable:0}]],allerg:["gluten"],allerg_doute:[],
   titane:"Compotez les pommes à la poêle titane, puis gratinez dans le plat titane : deux surfaces nues, aucun revêtement au contact du sucre chaud.",
   steps:[["Coupez les pommes en dés, compotez-les 5 minutes à la poêle avec la cannelle.",300],
          ["Du bout des doigts, sablez farine, flocons, sucre et beurre froid en gros grumeaux.",180],
@@ -141,7 +141,7 @@ const R = [
   intro:"Le pot de yaourt sert de mesure : simple, fiable, sans balance.",
   diets:["vegetarien","sans_gluten"],appl:["four"],active:10,total:40,diff:"Facile",serv:8,
   ing:[[1,"pot","yaourt nature"],[2,"pots","sucre"],[3,"pots","maïzena",{note:"ou farine de riz"}],[3,"","œuf"],
-       [0.5,"pot","huile neutre",{staple:1}],[1,"c. à c.","levure chimique",{staple:1,scalable:0}],[1,"","citron",{note:"zeste"}]],
+       [0.5,"pot","huile neutre",{staple:1}],[1,"c. à c.","levure chimique",{staple:1,scalable:0}],[1,"","citron",{note:"zeste"}]],allerg:["gluten","lait"],allerg_doute:[],
   titane:"Le moule titane assure un démoulage net sans beurrer ni fariner : la surface inrayable n'attache pas.",
   steps:[["Versez le yaourt dans un saladier, rincez le pot. Ajoutez sucre, œufs, huile, zeste.",120],
          ["Incorporez maïzena et levure jusqu'à une pâte lisse.",60],
@@ -213,18 +213,11 @@ const ic=(id,cls="ic",w=1.6)=>`<svg class="${cls}" viewBox="0 0 24 24" fill="non
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fmtQty=q=>{if(q===0)return"";const r=Math.round(q*100)/100;return Math.abs(r-Math.round(r))<0.01?String(Math.round(r)):String(r).replace(".",",");};
 
-function allergenHits(r){const h=new Set();
-  for(const x of r.ing){const n=norm(x[2]+" "+((x[3]&&x[3].note)||""));
-    if(/\b(farine|galette|chapelure|semoule|couscou|pain|biscuit|speculoo|tortilla)\b/.test(n)&&!/pois chiche/.test(n))h.add("gluten");
-    if(/\bpate\b/.test(n))h.add("gluten");
-    if(/\b(yaourt|creme|fromage|mascarpone|feta|mozzarella|parmesan)\b/.test(n))h.add("lactose");
-    if(/\bbeurre\b/.test(n)&&!/(cacahuete|amande|noisette|cajou)/.test(n))h.add("lactose");
-    if(/\blait\b/.test(n)&&!/(coco|amande|avoine|soja|vegetal|riz)/.test(n))h.add("lactose");
-    if(/\b(amande|noisette|cajou|pecan|cacahuete|tahini|pistache)\b/.test(n))h.add("fruits_coque");
-    if(/\bnoix\b/.test(n)&&!/muscade|coco/.test(n))h.add("fruits_coque");
-    if(/\b(oeuf|œuf|mayonnaise)\b/.test(n))h.add("oeuf");
-    if(/\b(soja|tofu|edamame)\b/.test(n))h.add("soja");}
-  return h;}
+// Les allergenes sont calcules par le pipeline (src/forneau_recipes/allergenes.py) et
+// stockes dans la recette : une seule source de verite pour le site et pour l app, et
+// les quatorze categories du reglement au lieu des cinq devinees ici a la volee.
+// Le doute compte comme une presence : en allergie, on s'abstient (ticket A02).
+function allergenHits(r){return new Set([...(r.allerg||[]),...(r.allerg_doute||[])]);}
 
 function coverage(r){const key=r.ing.filter(x=>!(x[3]&&x[3].staple));
   if(!S.pantry.size)return{have:0,total:key.length,miss:key.length};
