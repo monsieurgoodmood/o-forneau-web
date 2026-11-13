@@ -1,5 +1,5 @@
-const CACHE = "forneau-v9";
-const CORE = ["./", "index.html", "app.js", "recipes_more.js", "manifest.webmanifest"];
+const CACHE = "forneau-v11";
+const CORE = ["./", "index.html", "app.js", "i18n.js", "mesure.js", "recipes_more.js", "manifest.webmanifest"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).catch(()=>{}));
