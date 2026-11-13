@@ -21,6 +21,20 @@
   .box{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--green);border-radius:12px;padding:16px 18px;margin:18px 0}
   footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:13px}
 </style>
+<style>
+  /* Bannière de consentement, reprise de l'app pour que la page légale sache la rouvrir. */
+  #mfconsent{position:fixed;left:12px;right:12px;bottom:12px;z-index:97;background:var(--card);
+    border:1px solid rgba(169,130,62,.38);border-radius:16px;padding:18px 18px 14px;max-width:560px;
+    margin:0 auto;box-shadow:0 18px 40px -18px rgba(29,42,24,.5);opacity:0;transform:translateY(16px);
+    transition:transform .26s cubic-bezier(.2,.8,.2,1),opacity .26s}
+  #mfconsent.on{opacity:1;transform:translateY(0)}
+  #mfconsent .mct{margin:0 0 14px;font-size:14px;line-height:1.55}
+  #mfconsent .mcx{display:flex;gap:10px}
+  #mfconsent .mcb{flex:1;min-height:46px;border-radius:999px;font-size:14px;font-weight:600;
+    cursor:pointer;border:1px solid var(--green);background:transparent;color:var(--green)}
+  #mfconsent .mcb.mcok{background:var(--green);color:#F7F5EF}
+  #mfconsent .mcl{display:inline-block;margin-top:11px;font-size:12px;color:var(--muted)}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -46,7 +60,7 @@
     autres avec votre prénom (section&nbsp;4)&nbsp;; un <strong>abonnement</strong> passe par Apple ou
     Google et par RevenueCat aux États-Unis (section&nbsp;5)&nbsp;; la <strong>dictée vocale</strong> du
     mode cuisine, si vous l'activez, fait traiter le son par votre téléphone — donc par Google ou Apple,
-    pas par nous (section&nbsp;6).
+    pas par nous (section&nbsp;6). Enfin, nous aimerions <strong>mesurer l’usage</strong> de l’application pour l’améliorer — mais rien ne part tant que vous n’avez pas accepté, et refuser ne vous retire aucune fonction (section&nbsp;7).
   </div>
 
   <h2>1. Responsable du traitement</h2>
@@ -118,35 +132,55 @@
   l'application, et rien n'en est conservé. Si cela ne vous convient pas, n'activez pas la voix&nbsp;: le
   mode cuisine fonctionne entièrement au doigt.</p>
 
-  <h2>7. Ce que nous ne faisons pas</h2>
+  <h2>7. Mesure d'audience&nbsp;: seulement si vous dites oui</h2>
+  <p>Pour améliorer l'application, nous aimerions savoir ce qui sert et ce qui bloque&nbsp;: quels écrans
+  sont ouverts, quelles recettes sont lancées, où les gens abandonnent. Nous utilisons pour cela
+  <strong>Google Analytics 4</strong>.</p>
+  <p><strong>Rien ne part tant que vous n'avez pas accepté.</strong> Ce n'est pas une formule&nbsp;: tant
+  que vous n'avez pas répondu, ou si vous refusez, l'outil de mesure <strong>n'est même pas chargé</strong>
+  — aucune requête n'est envoyée à Google, pas même pour signaler votre venue. Refuser prend exactement un
+  clic, comme accepter, et ne vous retire <strong>aucune fonction</strong>. Votre choix est conservé six
+  mois, puis la question vous est reposée&nbsp;; vous pouvez en changer à tout moment depuis cette page
+  (<a href="#" id="mcRouvrir" onclick="try{window.MFMesure&amp;&amp;window.MFMesure.redemander()}catch(e){};return false;">revenir
+  sur mon choix</a>).</p>
+  <p><strong>Ce qui est mesuré&nbsp;:</strong> l'écran affiché et le temps passé dessus, la recette
+  ouverte ou lancée (par son identifiant, pas par vous), l'étape atteinte en mode cuisine, les termes
+  recherchés, les clics sur les boutons principaux, la profondeur de lecture d'une page.</p>
+  <p><strong>Ce qui n'est jamais transmis&nbsp;:</strong> ni votre e-mail, ni votre prénom, ni
+  l'identifiant de votre compte, ni rien de ce que vous écrivez — commentaire, nom de créateur proposé,
+  contenu de votre frigo. Les paramètres envoyés sont filtrés par un contrôle automatique qui écarte tout
+  champ portant ce genre d'information. Votre adresse IP est anonymisée, et les signaux publicitaires de
+  Google sont <strong>désactivés</strong>&nbsp;: ces données ne servent pas à vous cibler.</p>
+
+  <h2>8. Ce que nous ne faisons pas</h2>
   <ul>
     <li>Aucun traceur publicitaire, aucune régie, aucune revente ni location de données.</li>
-    <li><strong>Aucun outil de mesure d'audience</strong>, dans l'application&nbsp;: ni Google Analytics,
-    ni Firebase, ni outil de suivi des plantages. Les polices de caractères sont embarquées dans
-    l'application et non téléchargées&nbsp;: au lancement, aucune requête ne part vers un tiers.</li>
+    <li><strong>Aucune mesure sans votre accord préalable</strong> (section 7), et aucun outil de suivi
+    des plantages. Les polices de caractères sont embarquées dans l'application et non
+    téléchargées&nbsp;: au lancement, aucune requête ne part vers un tiers.</li>
     <li>Aucune collecte de localisation, de contacts ni d'identifiants publicitaires. Vos photos&nbsp;:
     uniquement celle que vous envoyez vous-même (section 4).</li>
     <li>Aucun profilage, aucune décision automatisée vous concernant.</li>
     <li>Aucun marketing sans votre consentement explicite.</li>
   </ul>
 
-  <h2>8. Hébergement et sécurité</h2>
+  <h2>9. Hébergement et sécurité</h2>
   <p>L'application et ses contenus sont servis via une connexion chiffrée (HTTPS). Les données de compte sont
   hébergées dans l'<strong>Union européenne</strong> (Francfort) auprès d'un prestataire conforme au RGPD,
   avec un cloisonnement par utilisateur (chacun n'accède qu'à ses propres données).</p>
 
-  <h2>9. Enfants</h2>
+  <h2>10. Enfants</h2>
   <p>L'application s'adresse aux adultes (18 ans et plus) et ne collecte pas sciemment de données concernant
   des enfants. Les profils que vous pouvez créer pour composer un foyer servent uniquement à estimer des
   quantités et des repères nutritionnels indicatifs.</p>
 
-  <h2>10. Avertissement nutrition et santé</h2>
+  <h2>11. Avertissement nutrition et santé</h2>
   <p>Les valeurs nutritionnelles et les besoins caloriques affichés sont des <strong>estimations
   indicatives</strong> (sources de composition type CIQUAL&nbsp;; dépense énergétique estimée par la formule
   de Mifflin-St Jeor). Elles ne constituent pas un avis médical. Pour un suivi personnalisé, consultez un
   professionnel de santé.</p>
 
-  <h2>11. Vos droits</h2>
+  <h2>12. Vos droits</h2>
   <p>Conformément au RGPD, vous disposez d'un droit d'<strong>accès</strong>, de <strong>rectification</strong>,
   d'<strong>effacement</strong>, de <strong>portabilité</strong> et d'<strong>opposition</strong>, ainsi que du
   droit de <strong>retirer votre consentement</strong> au marketing à tout moment (lien de désinscription dans
@@ -163,12 +197,14 @@
   <a href="mailto:contact@forneau.com">contact@forneau.com</a>. Vous pouvez aussi introduire une
   réclamation auprès de la CNIL.</p>
 
-  <h2>12. Modifications</h2>
+  <h2>13. Modifications</h2>
   <p>Cette politique peut évoluer. Toute modification sera publiée sur cette page avec une date de mise à
   jour actualisée.</p>
 
   <footer>Ô Forneau ! — Maison Forneau. Recettes réécrites, visuels propres, sans porc ni alcool. Les noms
   de marques ou de créateurs tiers ne sont pas utilisés dans l'application.</footer>
 </div>
+<script>window.MF_GA4_ID="";</script>
+<script src="../mesure.js"></script>
 </body>
 </html>

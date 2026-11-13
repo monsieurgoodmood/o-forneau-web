@@ -1,3 +1,7 @@
+// Mesure d'usage. `M` ne fait rien tant qu'aucun identifiant GA4 n'est configuré, et rien
+// non plus tant que la personne n'a pas accepté (voir mesure.js).
+const M=(e,p)=>{try{window.MFMesure&&window.MFMesure.suivre(e,p)}catch(_){}};
+const MEcran=(e,p)=>{try{window.MFMesure&&window.MFMesure.ecran(e,p)}catch(_){}};
 "use strict";
 /* Ô Forneau ! — app recettes (démo), par Maison Forneau. Charte forneau.com (crème/vert/or, Playfair).
    Données exemple sans porc ni alcool, sans nom de chef, visuels propres. Deux surfaces :
@@ -381,7 +385,7 @@ function viewProgramme(){
 
     <div class="daytotals">
       <div class="top"><div><div class="kcal tnum" id="pgKcal" data-k="${tot.kcal}">${tot.kcal} kcal</div><div class="tgt" id="pgTgt">objectif ${T.kcal} kcal/jour</div></div>
-        <button class="btn ghost" id="progGen" style="min-height:44px">${ic("i-swap")}Régénérer</button></div>
+        <button class="btn ghost" id="progGen" data-ga="clic_generer_programme" style="min-height:44px">${ic("i-swap")}Régénérer</button></div>
       <div class="bar"><i id="pgBar" style="width:${pct}%"></i></div>
       <div class="macro3">
         <div class="m"><div class="v tnum">${tot.p} g</div><div class="k">Protéines · muscles <b class="tgtv" id="pgPt">/ ${T.P} g</b></div></div>
@@ -560,7 +564,7 @@ function tagHTML(name){return `<span class="tag">${esc(name)}<button data-untag=
 
 /* ---------- détail ---------- */
 let curId=null,curServ=4,macroMode="personne";
-function openDetail(id){const r=R[id];curId=id;curServ=S.foyer.mode==="groupe"?foyerCount():r.serv;macroMode="personne";draftRate={taste:0,ease:0,visual:0};draftPhoto=null;$("#detailTitle").textContent=r.title;renderDetail();
+function openDetail(id){const r=R[id];M("recette_ouverte",{slug:r.id,titre:r.title,depuis:S.tab,temps:r.total});curId=id;curServ=S.foyer.mode==="groupe"?foyerCount():r.serv;macroMode="personne";draftRate={taste:0,ease:0,visual:0};draftPhoto=null;$("#detailTitle").textContent=r.title;renderDetail();
   if(SB){loadComments(r.slug);loadPhotos(r.slug);}
   $("#detail").classList.add("on");document.body.style.overflow="hidden";
   $("#detailFav").setAttribute("aria-pressed",S.favs.has(id));$("#detailFav").querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.3:1.6);
@@ -613,8 +617,8 @@ function renderDetail(){const r=R[curId],k=curServ/r.serv,cov=coverage(r),P=[...
       <p style="font-size:12.5px;color:var(--faint);margin-top:8px">Proposées dans la même famille d'ingrédients, à profil nutritionnel proche.</p></div>`:""}
     <div class="section"><h2>Préparation</h2><div class="steps">${stepsHTML}</div></div>
     ${SB?avisHTML(r):""}
-    <div class="cta-sticky"><button class="btn ghost" id="toCart2" style="flex:0 0 56px" aria-label="Courses">${ic("i-cart")}</button>
-      <button class="btn cookcta" id="startCook">${ic("i-play")}<span class="cl"><b>Mode cuisine</b><small>Étapes guidées · minuteurs · vocal mains libres</small></span></button></div>`;
+    <div class="cta-sticky"><button class="btn ghost" id="toCart2" data-ga="clic_ajout_courses" style="flex:0 0 56px" aria-label="Courses">${ic("i-cart")}</button>
+      <button class="btn cookcta" id="startCook" data-ga="clic_lancer_recette">${ic("i-play")}<span class="cl"><b>Mode cuisine</b><small>Étapes guidées · minuteurs · vocal mains libres</small></span></button></div>`;
   $("#servMinus").onclick=()=>{if(curServ>1){curServ--;renderDetail();}};
   $("#servPlus").onclick=()=>{if(curServ<12){curServ++;renderDetail();}};
   $("#startCook").onclick=()=>startCook(curId);
@@ -624,7 +628,7 @@ function renderDetail(){const r=R[curId],k=curServ/r.serv,cov=coverage(r),P=[...
 
 /* ---------- mode cuisine ---------- */
 let cookStep=0,cookR=null,timerInt=null,timerLeft=0;
-function startCook(id){cookR=R[id];cookStep=0;renderCook();setMicUI(false);$("#cook").classList.add("on");requestWake();}
+function startCook(id){cookR=R[id];cookStep=0;M("cuisine_debut",{slug:cookR.id,etapes:cookR.steps.length});renderCook();setMicUI(false);$("#cook").classList.add("on");requestWake();}
 function renderCook(){const r=cookR,s=r.steps[cookStep],n=r.steps.length;
   $("#cookKicker").textContent=`Étape ${cookStep+1} sur ${n}`;$("#cookCount").textContent=`${cookStep+1}/${n}`;
   $("#cookText").textContent=s[0];$("#cookProg").style.width=((cookStep+1)/n*100)+"%";$("#cookPrev").disabled=cookStep===0;
@@ -654,16 +658,16 @@ function handleVoice(t){const has=(...w)=>w.some(x=>t.includes(x));
   else if(has("minuteur","chrono","timer","lance le temps")){startStepTimer();}
   else if(has("pause","arrête","arrete"," stop","attends")){stopTimer();speak("Minuteur en pause.");vstat("En pause.");}
   else if(has("fini","terminé","termine","c'est prêt","c'est bon")){cookAdvance();}}
-function cookAdvance(){if(!cookR)return;if(cookStep<cookR.steps.length-1){cookStep++;renderCook();speakStep();}else{finishCook();}}
+function cookAdvance(){if(!cookR)return;if(cookStep<cookR.steps.length-1){cookStep++;M("cuisine_etape",{slug:cookR.id,etape:cookStep+1,sur:cookR.steps.length});renderCook();speakStep();}else{finishCook();}}
 function startStepTimer(){if(!cookR)return;const s=cookR.steps[cookStep];if(s[1]&&s[1]>=60){$("#cookTimerWrap").hidden=false;if(!timerInt)$("#cookTimerBtn").click();speak("Minuteur lancé, "+Math.round(s[1]/60)+" minutes.");}else{speak("Cette étape n'a pas de minuteur.");vstat("Pas de minuteur pour cette étape.");}}
-function finishCook(){$("#cook").classList.remove("on");releaseWake();stopVoice();
+function finishCook(){M("cuisine_terminee",{slug:cookR&&cookR.id,etapes:cookR&&cookR.steps.length});$("#cook").classList.remove("on");releaseWake();stopVoice();
   setTimeout(()=>{if(curId!=null&&$("#detail").classList.contains("on")){const el=$(".avis");if(el){el.scrollIntoView({behavior:"smooth",block:"start"});toast("Bravo ! Comment s'est passée la recette ?");return;}}toast("Bon appétit !");},450);}
 function notifyTimer(){try{if("Notification"in window&&Notification.permission==="granted")new Notification("Ô Forneau !",{body:"Minuteur terminé — étape "+(cookStep+1)});}catch(e){}try{navigator.vibrate&&navigator.vibrate([200,120,200]);}catch(e){}}
 $("#cookTimerBtn").addEventListener("click",()=>{if(timerInt){stopTimer();return;}$("#cookTimerBtn").querySelector("span").textContent="Pause";
   timerInt=setInterval(()=>{if(timerLeft>0){timerLeft--;paintTimer();}else{stopTimer();toast("Minuteur terminé");notifyTimer();speak("Minuteur terminé.");}},1000);});
 $("#cookNext").onclick=()=>cookAdvance();
 $("#cookPrev").onclick=()=>{if(cookStep>0){cookStep--;renderCook();if(voiceOn)speakStep();}};
-$("#cookClose").onclick=()=>{$("#cook").classList.remove("on");stopTimer();releaseWake();stopVoice();};
+$("#cookClose").onclick=()=>{M("cuisine_abandon",{slug:cookR&&cookR.id,etape:cookStep+1,sur:cookR&&cookR.steps.length});$("#cook").classList.remove("on");stopTimer();releaseWake();stopVoice();};
 $("#cookMic").onclick=()=>toggleVoice();
 let wake=null;async function requestWake(){try{if("wakeLock"in navigator)wake=await navigator.wakeLock.request("screen");}catch{}}
 function releaseWake(){try{wake&&wake.release();wake=null;}catch{}}
@@ -738,7 +742,7 @@ function fillFilterSheet(){$("#filterSheetBody").innerHTML=filterGroups()+
   `<div style="margin-top:22px;display:flex;gap:10px"><button class="btn ghost" id="catClear2" style="flex:0 0 auto">Effacer</button>
    <button class="btn" data-close style="flex:1">Voir <span id="filterApplyCount" class="tnum">${filtered().length}</span> recettes</button></div>`;}
 function fillSortSheet(){$("#sortSheetBody").innerHTML=SORTS.map(s=>`<button class="sortrow" data-sort="${s.k}" aria-pressed="${S.sort===s.k}">${ic(s.i)}<span>${esc(s.l)}</span><span class="tk">${ic("i-check",'ic',2.3)}</span></button>`).join("");}
-function render(){$$(".navitem,.bottomnav button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===S.tab?"page":"false"));
+function render(){MEcran(S.tab);$$(".navitem,.bottomnav button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===S.tab?"page":"false"));
   S.usePantry=(S.tab==="assistant"&&(S.astep>=ASTEPS.length||S.pantry.size>0));
   const V={home:viewHome,foyer:viewFoyer,programme:viewProgramme,assistant:viewAssistant,catalogue:viewCatalogue,favoris:viewFav,courses:viewCourses};
   $("#view").innerHTML=(V[S.tab]||viewHome)();
@@ -798,7 +802,7 @@ document.addEventListener("click",e=>{
   if(t.id==="aSkip"){S.astep++;render();return;}
   if(t.id==="aBack"){S.astep=0;render();window.scrollTo(0,0);return;}
   if(t.id==="catToggle"){S.catOpen=!S.catOpen;render();return;}
-  if(t.id==="catClear"||t.id==="catClear2"){S.diets.clear();S.appl.clear();S.time=null;S.avoid.clear();S.meal.clear();S.q="";render();return;}
+  if(t.id==="catClear"||t.id==="catClear2"){M("filtres_effaces",{avant:filtered().length});S.diets.clear();S.appl.clear();S.time=null;S.avoid.clear();S.meal.clear();S.q="";render();return;}
   if(t.id==="detailBack"){history.back();return;}
   if(t.id==="detailFav"){const id=curId;S.favs.has(id)?S.favs.delete(id):S.favs.add(id);LS.set("favs",[...S.favs]);
     t.setAttribute("aria-pressed",S.favs.has(id));t.querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.3:1.6);updateBadges();return;}
@@ -823,7 +827,7 @@ function editProg(el){const pf=el.closest("[data-pf]");if(!pf)return false;const
   S.prog[f]=f==="act"?pf.value:(parseInt(pf.value,10)||0);LS.set("prog",S.prog);nudgeAccount();updateProgLive();return true;}
 function editMember(el){const mf=el.closest("[data-mf]");if(!mf)return false;const[i,field]=mf.dataset.mf.split(":");const m=S.foyer.members[+i];
   if(m){m[field]=(field==="act"||field==="diet")?mf.value:(parseInt(mf.value,10)||0);LS.set("foyer",S.foyer);nudgeAccount();if(field==="diet"){render();}else{updateFoyerKcal();}}return true;}
-document.addEventListener("input",e=>{if(editProg(e.target))return;if(editMember(e.target))return;if(e.target.id==="q"){S.q=e.target.value;const list=filtered();
+document.addEventListener("input",e=>{if(editProg(e.target))return;if(editMember(e.target))return;if(e.target.id==="q"){S.q=e.target.value;const list=filtered();clearTimeout(window.__mq);window.__mq=setTimeout(()=>{if(S.q.trim().length>2)M("recherche",{terme:S.q.trim().toLowerCase().slice(0,60),resultats:list.length})},900);
   const host=$(".catmain .list");if(host)host.innerHTML=list.length?list.map(cardHTML).join(""):`<div class="empty" style="grid-column:1/-1">${ic("i-compass",'ic')}<h3>Aucune recette</h3><p>Décochez un critère.</p></div>`;
   const cnt=$(".catmain .sechead .count b");if(cnt)cnt.textContent=list.length;}});
 document.addEventListener("submit",e=>{if(e.target.id==="aPantryForm"){e.preventDefault();const i=$("#aPantryInput");addTag(i.value);i.value="";i.focus();}});
