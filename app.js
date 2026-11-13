@@ -564,8 +564,8 @@ function openDetail(id){const r=R[id];curId=id;curServ=S.foyer.mode==="groupe"?f
   if(SB){loadComments(r.slug);loadPhotos(r.slug);}
   $("#detail").classList.add("on");document.body.style.overflow="hidden";
   $("#detailFav").setAttribute("aria-pressed",S.favs.has(id));$("#detailFav").querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.3:1.6);
-  history.pushState({d:1},"");}
-function closeDetail(){$("#detail").classList.remove("on");document.body.style.overflow="";curId=null;}
+  majUrl(false);}
+function closeDetail(){$("#detail").classList.remove("on");document.body.style.overflow="";curId=null;majUrl(true);}
 function renderDetail(){const r=R[curId],k=curServ/r.serv,cov=coverage(r),P=[...S.pantry].map(norm),prod=PRODUCTS[r.product];
   const ingHTML=r.ing.map(x=>{const[q,u,name,o={}]=x;const scal=o.scalable!==0&&!o.staple;const qty=scal?q*k:q;const n=norm(name);
     const have=S.pantry.size&&!o.staple&&P.some(p=>n.includes(p)||p.includes(n));
@@ -673,7 +673,43 @@ function addTag(v){v=v.trim();if(v&&!S.pantry.has(v)){S.pantry.add(v);LS.set("pa
 function delTag(v){S.pantry.delete(v);LS.set("pantry",[...S.pantry]);renderAPantry();updateBadges();}
 
 /* ---------- nav / badges ---------- */
-function setTab(t){S.direct=null;S.tab=t;if(t==="assistant")S.usePantry=S.pantry.size>0;render();window.scrollTo(0,0);}
+
+// ---------- Adresses partageables (ticket A23) ----------
+// Chaque ecran avait la meme URL : impossible de partager une recette, et les appels a
+// l'action de la page vitrine retombaient tous a la racine. On ecrit l'etat dans le
+// fragment d'URL — #/programme, #/recette/<slug> — ce qui marche sans serveur, survit a
+// un rechargement et rend le bouton Retour du navigateur utile.
+// Les memes chemins que l'app native, pour qu'un lien marche des deux cotes.
+const ROUTES = {home:"home", catalogue:"recettes", assistant:"assistant", programme:"programme",
+                foyer:"foyer", courses:"courses", favoris:"favoris", decouvrir:"decouvrir"};
+const ONGLET_PAR_CHEMIN = Object.fromEntries(Object.entries(ROUTES).map(([k,v])=>[v,k]));
+let _majUrlEnCours=false;
+
+function urlCourante(){
+  if(curId!=null && R[curId]) return "#/recette/"+encodeURIComponent(R[curId].slug||R[curId].id);
+  return "#/"+(ROUTES[S.tab]||"home");
+}
+function majUrl(remplacer){
+  const u=urlCourante();
+  if(("#"+location.hash.slice(1))===u) return;
+  _majUrlEnCours=true;
+  try{ remplacer ? history.replaceState({r:1},"",u) : history.pushState({r:1},"",u); }
+  finally{ setTimeout(()=>{_majUrlEnCours=false;},0); }
+}
+function appliquerUrl(){
+  if(_majUrlEnCours) return;
+  const chemin=decodeURIComponent(location.hash.replace(/^#\/?/,"")).split("/");
+  if(chemin[0]==="recette" && chemin[1]){
+    const i=R.findIndex(x=>(x.slug||x.id)===chemin[1]);
+    if(i>=0){ if(curId!=null) closeDetail(); openDetail(i); return; }
+  }
+  if(curId!=null) closeDetail();
+  const onglet=ONGLET_PAR_CHEMIN[chemin[0]];
+  if(onglet && onglet!==S.tab){ S.tab=onglet; render(); window.scrollTo(0,0); }
+}
+window.addEventListener("hashchange", appliquerUrl);
+
+function setTab(t){S.direct=null;S.tab=t;if(t==="assistant")S.usePantry=S.pantry.size>0;render();window.scrollTo(0,0);majUrl(false);}
 function courseItems(){const g={};const P=[...S.pantry].map(norm);
   R.filter(r=>S.favs.has(r.id)).forEach(r=>r.ing.filter(x=>!(x[3]&&x[3].staple)).forEach(x=>{const n=norm(x[2]);
     if(S.pantry.size&&P.some(p=>n.includes(p)||p.includes(n)))return;g[x[2]]=1;}));return g;}
@@ -954,3 +990,6 @@ async function delPhoto(id){if(!confirm("Supprimer votre photo ?"))return;const 
 if(SB){SB.auth.getSession().then(({data})=>{if(data&&data.session){afterAuth();}else{maybeWelcome();}}).catch(()=>maybeWelcome());}
 
 render();updateAcct();loadStats();
+// Un lien partage doit mener a l ecran promis des le premier chargement,
+// pas a la racine (ticket A23).
+appliquerUrl();
