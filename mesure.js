@@ -172,24 +172,92 @@
   }
 
   // ── Instrumentation automatique ───────────────────────────────────────────────────
-  // Tout élément portant data-ga="nom" est suivi au clic, avec ses data-ga-* en
-  // paramètres. Un nouveau bouton se mesure donc sans toucher à ce fichier.
+  //
+  // On ne marque pas les boutons un par un : l'app étiquette déjà ses éléments
+  // interactifs avec des attributs `data-*` qui NOMMENT l'action (data-fav, data-diet,
+  // data-open, data-course, data-star…). On s'en sert comme vocabulaire. Conséquence
+  // voulue : un bouton ajouté demain est mesuré sans qu'on touche à ce fichier, et on ne
+  // se réveille pas dans six mois avec la moitié de l'app non instrumentée.
+  //
+  // Tout part sous UN SEUL nom d'événement, `clic`, avec l'action en paramètre. GA4
+  // plafonne à 500 noms d'événements distincts par propriété ; un nom par bouton y
+  // courrait tout droit, et rendrait les rapports illisibles au passage.
+  const ACTIONS = ['ga', 'addtag', 'aopt', 'auth', 'authprompt', 'cdel', 'check', 'course',
+    'delphoto', 'diet', 'fav', 'fcount', 'ffam', 'fmode', 'go', 'goal', 'k', 'kc', 'macro',
+    'meal', 'mf', 'msex', 'open', 'own', 'pf', 'photofull', 'psex', 'repas', 'report',
+    'repphoto', 'sort', 'star', 'tab', 'untag',
+    // Relevés sur le DOM vivant, pas dans la source : ils sont posés dynamiquement.
+    'close', 'fnutri'];
+
+  // L'étiquette visible d'un bouton est écrite par nous — sauf dans les zones de contenu
+  // d'utilisateur (commentaires, photos), qu'on ne lit jamais.
+  const ZONES_UTILISATEUR = '.avis, #avisList, #avisGallery, .cmt, .photo, textarea, input';
+  function etiquette(el) {
+    if (el.closest(ZONES_UTILISATEUR)) return null;
+    const t = (el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\s+/g, ' ');
+    if (!t || t.length > 40) return null;
+    // Lettres, chiffres, ponctuation douce : rien qui ressemble à une adresse ou un numéro.
+    if (!/^[\p{L}\p{N} '’·,:()+%°.-]+$/u.test(t)) return null;
+    if (/@|\d{5,}/.test(t)) return null;
+    return t;
+  }
+
   function brancher() {
     document.addEventListener('click', (e) => {
-      const el = e.target.closest('[data-ga]');
-      if (el) {
-        const p = {};
-        for (const a of el.attributes) {
-          if (a.name.startsWith('data-ga-')) p[a.name.slice(8).replace(/-/g, '_')] = a.value;
-        }
-        envoyer(el.dataset.ga, nettoyer(p));
+      const brut = e.target instanceof Element ? e.target : null;
+      if (!brut) return;
+
+      // 1. Un départ vers l'extérieur. Le lien vers une poêle est LE signal commercial :
+      //    il relie l'usage de l'app au chiffre de la boutique.
+      const a = brut.closest('a[href]');
+      if (a && a.host && a.host !== location.host) {
+        const produit = /forneau\.com$/i.test(a.host) && a.pathname.startsWith('/products/')
+          ? a.pathname.split('/products/')[1].split(/[/?#]/)[0] : null;
+        envoyer(produit ? 'clic_produit' : 'clic_sortant', {
+          ecran: ecranCourant, domaine: a.host,
+          ...(produit ? { produit } : { chemin: a.pathname.slice(0, 80) }),
+          recette: contexteRecette(a),
+        });
         return;
       }
-      // Les départs vers la boutique comptent : c'est le lien entre l'app et le chiffre.
-      const a = e.target.closest('a[href]');
-      if (a && a.host && a.host !== location.host) {
-        envoyer('clic_sortant', { domaine: a.host, chemin: a.pathname.slice(0, 80) });
+
+      // 2. Une action nommée par l'app elle-même.
+      //
+      // C'est l'élément le PLUS PROCHE qui gagne, pas le premier nom de la liste. Les
+      // cartes recette portent `data-open` et contiennent le bouton favori `data-fav` :
+      // chercher action par action attribuait le favori à l'ouverture de la carte, et le
+      // geste le plus intéressant disparaissait dans son conteneur.
+      let el = brut, cle = null;
+      while (el && el !== document.documentElement) {
+        cle = ACTIONS.find((k) => el.hasAttribute('data-' + k));
+        if (cle) break;
+        el = el.parentElement;
       }
+      if (cle) {
+        const p = { ecran: ecranCourant, action: cle };
+        const v = el.getAttribute('data-' + cle);
+        if (v) p.valeur = v.slice(0, 60);
+        // data-ga-* reste possible pour préciser un cas particulier.
+        for (const at of el.attributes) {
+          if (at.name.startsWith('data-ga-')) p[at.name.slice(8).replace(/-/g, '_')] = at.value;
+        }
+        const lab = etiquette(el);
+        if (lab) p.etiquette = lab;
+        const rec = contexteRecette(el);
+        if (rec) p.recette = rec;
+        envoyer(cle === 'ga' ? (v || 'clic') : 'clic', nettoyer(p));
+        return;
+      }
+
+      // 3. Tout autre élément interactif : on le compte quand même, sinon un bouton sans
+      //    attribut devient un angle mort — et c'est toujours celui-là qui pose question.
+      const b = brut.closest('button, [role="button"], a[href], summary, label');
+      if (!b) return;
+      const lab = etiquette(b);
+      envoyer('clic', nettoyer({
+        ecran: ecranCourant, action: 'autre',
+        valeur: b.id || null, etiquette: lab, recette: contexteRecette(b),
+      }));
     }, true);
 
     // Profondeur de lecture, par paliers, une seule fois chacun.
@@ -207,6 +275,17 @@
     // Le temps du dernier écran doit partir même si l'onglet est fermé.
     addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') finirEcran(); });
     addEventListener('pagehide', finirEcran);
+  }
+
+  /// Quelle recette est à l'écran, ou sous le doigt ? Sans ce rattachement, « a cliqué sur
+  /// Ajouter aux courses » ne dit pas POUR QUOI, et le chiffre ne sert à rien.
+  function contexteRecette(el) {
+    const carte = el.closest('[data-open]');
+    if (carte) return carte.getAttribute('data-open');
+    // La fiche ouverte porte son identifiant dans le DOM : le module de mesure n'a pas à
+    // connaître les variables internes de l'app, et ne cassera donc pas si elles bougent.
+    const detail = document.querySelector('#detail.on');
+    return (detail && detail.dataset.slug) || null;
   }
 
   // ── Bannière ──────────────────────────────────────────────────────────────────────

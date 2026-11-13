@@ -580,12 +580,12 @@ function tagHTML(name){return `<span class="tag">${esc(name)}<button data-untag=
 
 /* ---------- détail ---------- */
 let curId=null,curServ=4,macroMode="personne";
-function openDetail(id){const r=R[id];M("recette_ouverte",{slug:r.id,titre:r.title,depuis:S.tab,temps:r.total});curId=id;curServ=S.foyer.mode==="groupe"?foyerCount():r.serv;macroMode="personne";draftRate={taste:0,ease:0,visual:0};draftPhoto=null;$("#detailTitle").textContent=r.title;renderDetail();
+function openDetail(id){const r=R[id];M("recette_ouverte",{slug:r.id,titre:r.title,depuis:S.tab,temps:r.total});curId=id;$("#detail").dataset.slug=r.id;curServ=S.foyer.mode==="groupe"?foyerCount():r.serv;macroMode="personne";draftRate={taste:0,ease:0,visual:0};draftPhoto=null;$("#detailTitle").textContent=r.title;renderDetail();
   if(SB){loadComments(r.slug);loadPhotos(r.slug);}
   $("#detail").classList.add("on");document.body.style.overflow="hidden";
   $("#detailFav").setAttribute("aria-pressed",S.favs.has(id));$("#detailFav").querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.3:1.6);
   majUrl(false);}
-function closeDetail(){$("#detail").classList.remove("on");document.body.style.overflow="";curId=null;majUrl(true);}
+function closeDetail(){$("#detail").classList.remove("on");delete $("#detail").dataset.slug;document.body.style.overflow="";curId=null;majUrl(true);}
 function renderDetail(){const r=R[curId],k=curServ/r.serv,cov=coverage(r),P=[...S.pantry].map(norm),prod=PRODUCTS[r.product];
   const ingHTML=r.ing.map(x=>{const[q,u,name,o={}]=x;const scal=o.scalable!==0&&!o.staple;const qty=scal?q*k:q;const n=norm(name);
     const have=S.pantry.size&&!o.staple&&P.some(p=>n.includes(p)||p.includes(n));
