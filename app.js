@@ -300,7 +300,7 @@ function viewHome(){
   const sig=R.slice(0,6).map(cardHTML).join("");
   const sug=suggestions(5);
   return `<section class="hero"><div class="img">
-      <img src="img/hero-forneau.jpg" alt="Poêle en titane Maison Forneau" onerror="this.style.display='none'"/>
+      <picture><source type="image/webp" srcset="img/hero-forneau-560.webp 560w, img/hero-forneau.webp 1122w" sizes="100vw"><source type="image/jpeg" srcset="img/hero-forneau-560.jpg 560w, img/hero-forneau.jpg 1122w" sizes="100vw"><img src="img/hero-forneau.jpg" width="1122" height="1402" alt="Poêle en titane Maison Forneau" fetchpriority="high" decoding="async" onerror="this.style.display='none'"/></picture>
       <div class="cap"><div class="ey">Ô Forneau !</div><h1>Bien manger, simplement</h1>
         <div class="ctag">par Maison Forneau</div></div></div></section>
     <p class="hsub">Les meilleures recettes virales des réseaux, réunies ici — réécrites, classées et adaptées à votre régime, votre appareil et votre foyer.</p>
@@ -494,7 +494,7 @@ function viewAssistant(){
     <div class="sugg" id="aPantrySugg"></div>` : "";
   const count=filtered().length;
   return `<section class="hero"><div class="img">
-      <img src="img/hero-forneau.jpg" alt="Poêle en titane Maison Forneau" onerror="this.style.display='none'"/>
+      <picture><source type="image/webp" srcset="img/hero-forneau-560.webp 560w, img/hero-forneau.webp 1122w" sizes="100vw"><source type="image/jpeg" srcset="img/hero-forneau-560.jpg 560w, img/hero-forneau.jpg 1122w" sizes="100vw"><img src="img/hero-forneau.jpg" width="1122" height="1402" alt="Poêle en titane Maison Forneau" fetchpriority="high" decoding="async" onerror="this.style.display='none'"/></picture>
       <div class="cap"><div class="ey">Ô Forneau !</div><h1>Que cuisine-t-on&nbsp;?</h1>
         <div class="ctag">répondez, on vous propose</div></div></div></section>
     <section class="assistant">
