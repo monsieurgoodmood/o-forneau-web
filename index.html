@@ -396,20 +396,20 @@ img{max-width:100%}
 /* ===================== Consentement à la mesure ===================== */
 /* Les deux boutons ont le MÊME poids visuel : refuser doit coûter exactement un clic,
    comme accepter. Une bannière qui rend le refus plus difficile est un dark pattern. */
-#mfconsent{position:fixed;left:12px;right:12px;bottom:calc(var(--navH) + 12px);z-index:97;
+#mfconsent,#mfnotif{position:fixed;left:12px;right:12px;bottom:calc(var(--navH) + 12px);z-index:97;
   background:var(--card);border:1px solid var(--lineGold);border-radius:var(--r20);
   padding:18px 18px 14px;box-shadow:var(--shadow);max-width:560px;margin:0 auto;
   transform:translateY(16px);opacity:0;transition:transform .26s cubic-bezier(.2,.8,.2,1),opacity .26s}
-#mfconsent.on{transform:translateY(0);opacity:1}
-#mfconsent .mct{margin:0 0 14px;font-size:14px;line-height:1.55;color:var(--ink)}
-#mfconsent .mcx{display:flex;gap:10px}
-#mfconsent .mcb{flex:1;min-height:46px;border-radius:var(--rpill);font-family:var(--fB);
+#mfconsent.on,#mfnotif.on{transform:translateY(0);opacity:1}
+#mfconsent .mct,#mfnotif .mct{margin:0 0 14px;font-size:14px;line-height:1.55;color:var(--ink)}
+#mfconsent .mcx,#mfnotif .mcx{display:flex;gap:10px}
+#mfconsent .mcb,#mfnotif .mcb{flex:1;min-height:46px;border-radius:var(--rpill);font-family:var(--fB);
   font-size:14px;font-weight:600;cursor:pointer;border:1px solid var(--green);
   background:transparent;color:var(--green);transition:background .18s,border-color .18s}
 #mfconsent .mcb:hover{background:var(--sageSoft)}
-#mfconsent .mcb.mcok{background:var(--green);color:#F7F5EF;border-color:var(--green)}
+#mfconsent .mcb.mcok,#mfnotif .mcb.mcok{background:var(--green);color:#F7F5EF;border-color:var(--green)}
 #mfconsent .mcb.mcok:hover{background:var(--greenDeep);border-color:var(--greenDeep)}
-#mfconsent .mcl{display:inline-block;margin-top:11px;font-size:12px;color:var(--muted);text-decoration:underline}
+#mfconsent .mcl,#mfnotif .mcl{display:inline-block;margin-top:11px;font-size:12px;color:var(--muted);text-decoration:underline}
 @media (min-width:720px){ #mfconsent{bottom:16px} }
 
 #toast{position:fixed;left:50%;bottom:calc(var(--navH) + 18px);transform:translateX(-50%);z-index:95;background:var(--greenDeep);color:#F3F1EB;
@@ -828,4 +828,7 @@ img{max-width:100%}
 <script>/* Identifiant GA4 — vide = mesure inerte, aucune bannière, aucune requête. */
 window.MF_GA4_ID="G-47YD9F0NPJ";</script>
 <script src="mesure.js"></script>
+<script>/* Clé publique Web Push (VAPID). Vide = notifications inertes, aucune bannière. */
+window.MF_VAPID="BBygaiWKdCNfxfwCBZyTpor_F9oScwNwXhQrj5xMbYTtbreIHp9sAUevcp7xMsqOe9AQs5Z71G0M3kiWtgvABXY";</script>
+<script src="push.js"></script>
 <script>if("serviceWorker"in navigator){addEventListener("load",()=>{try{navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}})}</script>

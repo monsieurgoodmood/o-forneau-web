@@ -1,5 +1,5 @@
-const CACHE = "forneau-v13";
-const CORE = ["./", "index.html", "app.js", "i18n.js", "mesure.js", "recipes_more.js", "manifest.webmanifest"];
+const CACHE = "forneau-v14";
+const CORE = ["./", "index.html", "app.js", "i18n.js", "mesure.js", "push.js", "recipes_more.js", "manifest.webmanifest"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).catch(()=>{}));
@@ -64,3 +64,36 @@ function secours(req) {
   }
   return new Response("", { status: 504, statusText: "Hors ligne" });
 }
+
+// ── Notifications push ────────────────────────────────────────────────────────────────
+// Charge utile JSON produite par la fonction `notifier` : {title, body, route, envoi, modele,
+// recette, icon}. `tag` = modèle : deux « idées du soir » successives se remplacent au lieu
+// de s'empiler.
+self.addEventListener("push", e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (_) { d = { title: "Ô Forneau", body: e.data ? e.data.text() : "" }; }
+  e.waitUntil(self.registration.showNotification(d.title || "Ô Forneau", {
+    body: d.body || "", icon: d.icon || "icon-192.png", badge: "icon-192.png", lang: d.lang,
+    tag: d.modele || "forneau", renotify: false,
+    data: { route: d.route || "/", envoi: d.envoi || "", modele: d.modele || "", recette: d.recette || "" },
+  }));
+});
+
+// Le lien profond de l'app (/recipe/<slug>, /frigo, …) devient l'adresse du site (#/recette/…).
+function urlDepuisRoute(route) {
+  let r = String(route || "/").replace(/^\/recipe\//, "/recette/");
+  return new URL("./", self.location.href).href.replace(/\/$/, "") + "/#" + (r.startsWith("/") ? r : "/" + r);
+}
+
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  const d = e.notification.data || {};
+  const q = "?notif=" + encodeURIComponent(d.envoi || "") + "&modele=" + encodeURIComponent(d.modele || "") + "&recette=" + encodeURIComponent(d.recette || "");
+  const cible = urlDepuisRoute(d.route).replace("/#", "/" + q + "#");
+  e.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then(liste => {
+    for (const c of liste) {
+      if (new URL(c.url).origin === self.location.origin && "navigate" in c) return c.navigate(cible).then(w => w && w.focus());
+    }
+    return clients.openWindow(cible);
+  }));
+});

@@ -158,6 +158,30 @@
   champ portant ce genre d'information. Votre adresse IP est anonymisée, et les signaux publicitaires de
   Google sont <strong>désactivés</strong>&nbsp;: ces données ne servent pas à vous cibler.</p>
 
+  <h2>7 bis. Notifications&nbsp;: seulement si vous les activez, et vous choisissez les sujets</h2>
+  <p>L'application et le site peuvent vous prévenir d'une idée de recette pour le soir, d'une recette qui
+  va avec votre frigo ou vos favoris, des nouvelles recettes, ou de la fin de votre essai. <strong>C'est une
+  question à part</strong>, distincte de la mesure d'audience&nbsp;: elle vous est posée par l'application
+  elle-même (à partir de votre deuxième visite), et seul votre oui déclenche la demande du téléphone ou du
+  navigateur. <strong>Une notification par jour au plus, quatre par semaine au plus, jamais entre 21&nbsp;h
+  et 9&nbsp;h</strong>, et chaque sujet se coche ou se décoche dans «&nbsp;Mon compte&nbsp;».</p>
+  <p><strong>Pour que les messages vous concernent</strong>, l'appareil envoie à nos serveurs un profil
+  d'usage réduit&nbsp;: quelles fonctions vous utilisez (frigo, favoris, mode cuisine, liste de courses,
+  programme) et combien de fois, les identifiants des dernières recettes vues, mises en favori ou cuisinées,
+  les mots de votre frigo et de votre liste, les régimes que vous filtrez, la taille de votre foyer. Ce profil
+  <strong>ne part que si les notifications sont activées</strong>, et il ne contient ni e-mail, ni prénom,
+  ni texte libre&nbsp;; un contrôle automatique rejette tout champ de ce genre.</p>
+  <p><strong>Le transport</strong> passe par Firebase Cloud Messaging (Google) sur Android et par le service
+  de notification de votre navigateur (Google, Mozilla ou Apple) sur le web. Ils reçoivent un jeton technique
+  propre à votre appareil et le texte du message&nbsp;— jamais le profil ci-dessus, qui reste chez nous
+  (Union européenne). L'application n'embarque <strong>aucun autre composant Google</strong>&nbsp;: ni
+  Analytics, ni Crashlytics.</p>
+  <p><strong>Pour arrêter</strong>&nbsp;: l'interrupteur dans «&nbsp;Mon compte&nbsp;», ou les réglages de
+  notification de votre téléphone ou navigateur. L'arrêt est immédiat et retire votre jeton de nos
+  serveurs. Votre choix est conservé un an, puis la question vous est reposée
+  (<a href="#" onclick="try{window.MFPush&amp;&amp;window.MFPush.redemander()}catch(e){};return false;">revenir
+  sur mon choix</a>).</p>
+
   <h2>8. Ce que nous ne faisons pas</h2>
   <ul>
     <li>Aucun traceur publicitaire, aucune régie, aucune revente ni location de données.</li>
