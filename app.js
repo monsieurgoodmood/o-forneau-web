@@ -913,7 +913,9 @@ function loadCloud(){const st=S.profile&&S.profile.app_state;if(!st||typeof st!=
   try{localStorage.setItem("mf_favs",JSON.stringify([...S.favs]));localStorage.setItem("mf_pantry",JSON.stringify([...S.pantry]));localStorage.setItem("mf_cart",JSON.stringify([...S.cart]));}catch{}
   render();updateBadges();}
 async function afterAuth(){try{const {data}=await SB.auth.getUser();S.user=data&&data.user||null;
-  if(S.user){const r=await SB.from("user_profiles").select("*").eq("id",S.user.id).maybeSingle();S.profile=r.data||null;loadCloud();loadMyRatings();hideWelcome();}
+  if(S.user){const r=await SB.from("user_profiles").select("*").eq("id",S.user.id).maybeSingle();S.profile=r.data||null;loadCloud();loadMyRatings();hideWelcome();
+    /* Client Forneau : ses mois offerts s'ouvrent d'eux-mêmes (rapprochement e-mail ↔ commandes payées, côté serveur). */
+    SB.functions.invoke("lier-commandes").then(({data})=>{if(data&&data.nouvelles&&data.nouvelles.length)toast("Votre commande "+data.nouvelles.join(", ")+" ouvre votre accès offert.");}).catch(()=>{});}
   updateAcct();}catch(e){}}
 async function doSignup(){const email=$("#auEmail").value.trim(),pass=$("#auPass").value,prenom=$("#auPrenom").value.trim();
   authErr("");if(!email||!pass)return authErr("E-mail et mot de passe requis.");if(!prenom)return authErr("Votre prénom, s'il vous plaît.");if(pass.length<6)return authErr("Mot de passe : 6 caractères minimum.");
