@@ -580,7 +580,7 @@ function tagHTML(name){return `<span class="tag">${esc(name)}<button data-untag=
 
 /* ---------- détail ---------- */
 let curId=null,curServ=4,macroMode="personne";
-function openDetail(id){const r=R[id];M("recette_ouverte",{slug:r.id,titre:r.title,depuis:S.tab,temps:r.total});curId=id;$("#detail").dataset.slug=r.id;curServ=S.foyer.mode==="groupe"?foyerCount():r.serv;macroMode="personne";draftRate={taste:0,ease:0,visual:0};draftPhoto=null;$("#detailTitle").textContent=r.title;renderDetail();
+function openDetail(id){const r=R[id];const slugR=String(r.slug||r.id);M("recette_ouverte",{slug:slugR,titre:r.title,depuis:S.tab,temps:r.total});curId=id;$("#detail").dataset.slug=slugR;curServ=S.foyer.mode==="groupe"?foyerCount():r.serv;macroMode="personne";draftRate={taste:0,ease:0,visual:0};draftPhoto=null;$("#detailTitle").textContent=r.title;renderDetail();
   if(SB){loadComments(r.slug);loadPhotos(r.slug);}
   $("#detail").classList.add("on");document.body.style.overflow="hidden";
   $("#detailFav").setAttribute("aria-pressed",S.favs.has(id));$("#detailFav").querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.3:1.6);
@@ -720,7 +720,7 @@ function appliquerUrl(){
   if(_majUrlEnCours) return;
   const chemin=decodeURIComponent(location.hash.replace(/^#\/?/,"")).split("/");
   if(chemin[0]==="recette" && chemin[1]){
-    const i=R.findIndex(x=>(x.slug||x.id)===chemin[1]);
+    const i=R.findIndex(x=>String(x.slug||x.id)===chemin[1]);
     if(i>=0){ if(curId!=null) closeDetail(); openDetail(i); return; }
   }
   if(curId!=null) closeDetail();
