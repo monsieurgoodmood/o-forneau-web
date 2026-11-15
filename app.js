@@ -864,6 +864,7 @@ function updateAcct(){const b=$("#acctBtn"),l=$("#acctLbl");if(!b)return;
 function authErr(m){const e=$("#authErr");if(e){e.textContent=m||"";e.hidden=!m;}}
 function trad(m){m=(m||"").toLowerCase();
   if(m.includes("already")||m.includes("registered")||m.includes("exists"))return "Cet e-mail a déjà un compte — connectez-vous.";
+  if(m.includes("not confirmed"))return "Adresse pas encore confirmée : ouvrez l'e-mail reçu et cliquez sur son lien, puis réessayez.";
   if(m.includes("invalid")||m.includes("credentials"))return "E-mail ou mot de passe incorrect.";
   if(m.includes("password"))return "Mot de passe : 6 caractères minimum.";
   if(m.includes("email"))return "E-mail invalide.";
@@ -920,8 +921,10 @@ async function afterAuth(){try{const {data}=await SB.auth.getUser();S.user=data&
 async function doSignup(){const email=$("#auEmail").value.trim(),pass=$("#auPass").value,prenom=$("#auPrenom").value.trim();
   authErr("");if(!email||!pass)return authErr("E-mail et mot de passe requis.");if(!prenom)return authErr("Votre prénom, s'il vous plaît.");if(pass.length<6)return authErr("Mot de passe : 6 caractères minimum.");
   const consent=($("#auConsent")||{}).checked||false;
-  const {error}=await SB.auth.signUp({email,password:pass,options:{data:{prenom,nom:$("#auNom").value.trim(),telephone:$("#auTel").value.trim(),marketing_consent:consent,locale:"fr"}}});
+  const {data,error}=await SB.auth.signUp({email,password:pass,options:{data:{prenom,nom:$("#auNom").value.trim(),telephone:$("#auTel").value.trim(),marketing_consent:consent,locale:(document.documentElement.lang||"fr").slice(0,2)},emailRedirectTo:location.origin+"/"}});
   if(error)return authErr(trad(error.message));
+  /* Depuis le 15/11 l'adresse doit être confirmée : pas de session tant que le lien reçu n'est pas cliqué. */
+  if(!data||!data.session){authMode="login";renderAuth();return authErr("Compte créé. Un e-mail vient de partir à "+email+" : cliquez sur son lien pour confirmer votre adresse, puis connectez-vous ici.");}
   await afterAuth();saveCloud();closeSheets();toast("Bienvenue "+prenom+" ! Compte créé.");}
 async function doLogin(){const email=$("#auEmail").value.trim(),pass=$("#auPass").value;authErr("");if(!email||!pass)return authErr("E-mail et mot de passe requis.");
   const {error}=await SB.auth.signInWithPassword({email,password:pass});if(error)return authErr(trad(error.message));
