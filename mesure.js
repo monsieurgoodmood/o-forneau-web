@@ -441,10 +441,19 @@
     // On ne demande rien tant que la personne n'a pas vu l'app fonctionner, et JAMAIS
     // par-dessus un écran d'accueil non choisi ni pendant la cuisson : une question de
     // mesure au milieu d'une recette en cours est une interruption, pas un consentement.
-    const moment_calme = () => {
-      const bloque = document.querySelector('#welcome, #cook');
-      return !(bloque && bloque.offsetParent !== null);
+    // Piège : `offsetParent` vaut toujours null pour un élément en position fixe. L'écran
+    // d'accueil et le mode cuisine le sont tous les deux : s'y fier faisait croire qu'ils
+    // étaient fermés, et la question s'invitait par-dessus. On regarde donc la vraie
+    // visibilité calculée.
+    const affiche = (el) => {
+      if (!el || el.hasAttribute('hidden')) return false;
+      const st = getComputedStyle(el);
+      if (st.display === 'none' || st.visibility === 'hidden' || st.opacity === '0') return false;
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
     };
+    const moment_calme = () =>
+      !affiche(document.querySelector('#welcome')) && !affiche(document.querySelector('#cook'));
     const tenter = () => {
       if (choix() !== null) return;                 // répondu entre-temps
       if (moment_calme()) { banniere(); return; }
