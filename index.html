@@ -413,7 +413,10 @@ img{max-width:100%}
 @media (min-width:720px){ #mfconsent{bottom:16px} }
 /* Le bandeau de consentement réserve sa place : il ne passe plus par-dessus une carte,
    un filtre ou une commande de cuisson. */
-body.consent-ouvert{padding-bottom:calc(var(--consentH, 150px) + 24px)}
+/* Le consentement vit DANS la page : il pousse le contenu, il ne le couvre pas. */
+#mfconsent{position:static;left:auto;right:auto;bottom:auto;margin:0 auto var(--s16);
+  transform:none;opacity:1;max-width:560px;width:100%}
+#mfconsent.on{transform:none;opacity:1}
 .wfree{margin:10px 0 2px;font-size:12.5px;line-height:1.45;color:var(--muted);text-align:center}
 .toastact{margin-left:14px;background:none;border:0;color:#D9BC8C;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:0}
 

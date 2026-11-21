@@ -411,19 +411,30 @@
       '<button type="button" class="mcb" id="mcOui">Accepter</button>' +
       '</div>' +
       '<a class="mcl" href="/legal/privacy.html">Politique de confidentialité</a>';
-    document.body.appendChild(d);
-    // Le bandeau ne doit RIEN recouvrir : on réserve sa hauteur en bas de page tant qu'il
-    // est affiché. Avant ce correctif, il masquait la première carte de recette, les
-    // filtres, et parfois les commandes du mode cuisine.
-    const reserver = () => {
-      document.body.style.setProperty('--consentH', d.offsetHeight + 'px');
-      document.body.classList.add('consent-ouvert');
-    };
-    requestAnimationFrame(() => { d.classList.add('on'); reserver(); });
-    addEventListener('resize', reserver);
+    // Le bandeau ne doit RIEN recouvrir. Il entre donc DANS le flux de la page, juste
+    // au-dessus du contenu, au lieu de flotter au-dessus. Posé en superposition, il
+    // masquait la première carte de recette, les filtres, et parfois les commandes du
+    // mode cuisine : une question sur la mesure d'audience ne vaut pas qu'on cache le
+    // produit pour la poser.
+    const hote = document.querySelector('#view');
+    if (hote && hote.parentNode) hote.parentNode.insertBefore(d, hote);
+    else document.body.appendChild(d);
+    requestAnimationFrame(() => d.classList.add('on'));
+
+    // Si la cuisson démarre pendant que la question est posée, le bandeau s'efface : on
+    // ne demande rien à quelqu'un qui a les mains dans une casserole. Il reviendra après.
+    const cuisine = document.querySelector('#cook');
+    if (cuisine && 'MutationObserver' in window) {
+      const suivre = () => {
+        const st = getComputedStyle(cuisine);
+        const ouverte = st.display !== 'none' && cuisine.getBoundingClientRect().height > 0;
+        d.style.display = ouverte ? 'none' : '';
+      };
+      new MutationObserver(suivre).observe(cuisine, { attributes: true, attributeFilter: ['style', 'class', 'hidden'] });
+      suivre();
+    }
     const fermer = (ok) => {
       garder(ok); d.classList.remove('on');
-      document.body.classList.remove('consent-ouvert');
       setTimeout(() => d.remove(), 240);
       if (ok) charger(); else couper();
     };
