@@ -417,7 +417,9 @@ img{max-width:100%}
 #mfconsent{position:static;left:auto;right:auto;bottom:auto;margin:0 auto var(--s16);
   transform:none;opacity:1;max-width:560px;width:100%}
 #mfconsent.on{transform:none;opacity:1}
-.wfree{margin:10px 0 2px;font-size:12.5px;line-height:1.45;color:var(--muted);text-align:center}
+/* Mention sous le bouton principal : sur fond sombre, le gris de texte secondaire
+   disparaissait complètement. */
+.wfree{margin:10px 0 2px;font-size:12.5px;line-height:1.45;color:#EFEAE0;opacity:.92;text-align:center}
 .toastact{margin-left:14px;background:none;border:0;color:#D9BC8C;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:0}
 
 #toast{position:fixed;left:50%;bottom:calc(var(--navH) + 18px);transform:translateX(-50%);z-index:95;background:var(--greenDeep);color:#F3F1EB;
@@ -612,6 +614,9 @@ img{max-width:100%}
 .wcard{position:relative;z-index:1;width:100%;max-width:470px;padding:30px 24px calc(28px + env(safe-area-inset-bottom));color:#fff;text-align:center}
 .wbrand{font-family:var(--fD);letter-spacing:.14em;font-size:20px;font-weight:600}
 .wsub{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--champagne);margin-top:4px;opacity:.92}
+/* La règle globale des titres peint en vert foncé. Sur la photo sombre de l'écran
+   d'accueil, le titre devenait illisible : on force le crème, comme le reste de la carte. */
+.welcome .wtitle{color:#FDFCF8;text-shadow:0 1px 14px rgba(18,32,20,.55)}
 .wtitle{font-family:var(--fD);font-size:31px;font-weight:600;margin:18px 0 8px;text-wrap:balance;line-height:1.1}
 .wlead{font-size:14.5px;line-height:1.55;opacity:.93;margin:0 auto 16px;max-width:390px}
 .wfeat{list-style:none;padding:0;margin:0 auto 22px;max-width:330px;text-align:left;display:flex;flex-direction:column;gap:9px}
