@@ -400,18 +400,33 @@
     d.id = 'mfconsent';
     d.setAttribute('role', 'dialog');
     d.setAttribute('aria-label', 'Mesure d’audience');
+    // Texte sobre et vérifiable : on ne promet plus que « rien qui vous identifie n'est
+    // transmis », affirmation que nous ne pouvions pas prouver. Les deux réponses ont
+    // désormais le même poids visuel — un refus ne doit pas coûter un effort de plus.
     d.innerHTML =
-      '<p class="mct">Nous aimerions mesurer l’usage de l’application — quels écrans servent, ' +
-      'ce qui bloque — pour l’améliorer. Rien qui vous identifie n’est transmis, et vous pouvez ' +
-      'refuser sans perdre la moindre fonction.</p>' +
+      '<p class="mct">Autorisez-vous la mesure d’audience pour nous aider à améliorer ' +
+      'l’application ? Votre choix ne change pas les fonctions disponibles.</p>' +
       '<div class="mcx">' +
       '<button type="button" class="mcb" id="mcNon">Refuser</button>' +
-      '<button type="button" class="mcb mcok" id="mcOui">Accepter</button>' +
+      '<button type="button" class="mcb" id="mcOui">Accepter</button>' +
       '</div>' +
-      '<a class="mcl" href="/legal/privacy.html">Notre politique de confidentialité</a>';
+      '<a class="mcl" href="/legal/privacy.html">Politique de confidentialité</a>';
     document.body.appendChild(d);
-    requestAnimationFrame(() => d.classList.add('on'));
-    const fermer = (ok) => { garder(ok); d.classList.remove('on'); setTimeout(() => d.remove(), 240); if (ok) charger(); else couper(); };
+    // Le bandeau ne doit RIEN recouvrir : on réserve sa hauteur en bas de page tant qu'il
+    // est affiché. Avant ce correctif, il masquait la première carte de recette, les
+    // filtres, et parfois les commandes du mode cuisine.
+    const reserver = () => {
+      document.body.style.setProperty('--consentH', d.offsetHeight + 'px');
+      document.body.classList.add('consent-ouvert');
+    };
+    requestAnimationFrame(() => { d.classList.add('on'); reserver(); });
+    addEventListener('resize', reserver);
+    const fermer = (ok) => {
+      garder(ok); d.classList.remove('on');
+      document.body.classList.remove('consent-ouvert');
+      setTimeout(() => d.remove(), 240);
+      if (ok) charger(); else couper();
+    };
     d.querySelector('#mcOui').addEventListener('click', () => fermer(true));
     d.querySelector('#mcNon').addEventListener('click', () => fermer(false));
   }
@@ -421,8 +436,21 @@
     if (!ID_MESURE) return;      // inerte tant qu'aucune propriété n'est configurée
     brancher();
     const c = choix();
-    if (c === true) charger();
-    else if (c === null) setTimeout(banniere, 1200);  // laisser voir l'app d'abord
+    if (c === true) { charger(); return; }
+    if (c !== null) return;
+    // On ne demande rien tant que la personne n'a pas vu l'app fonctionner, et JAMAIS
+    // par-dessus un écran d'accueil non choisi ni pendant la cuisson : une question de
+    // mesure au milieu d'une recette en cours est une interruption, pas un consentement.
+    const moment_calme = () => {
+      const bloque = document.querySelector('#welcome, #cook');
+      return !(bloque && bloque.offsetParent !== null);
+    };
+    const tenter = () => {
+      if (choix() !== null) return;                 // répondu entre-temps
+      if (moment_calme()) { banniere(); return; }
+      setTimeout(tenter, 4000);                     // on repassera plus tard
+    };
+    setTimeout(tenter, 8000);
   }
 
   if (document.readyState === 'loading') addEventListener('DOMContentLoaded', demarrer);

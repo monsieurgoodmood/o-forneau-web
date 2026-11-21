@@ -411,6 +411,11 @@ img{max-width:100%}
 #mfconsent .mcb.mcok:hover{background:var(--greenDeep);border-color:var(--greenDeep)}
 #mfconsent .mcl,#mfnotif .mcl{display:inline-block;margin-top:11px;font-size:12px;color:var(--muted);text-decoration:underline}
 @media (min-width:720px){ #mfconsent{bottom:16px} }
+/* Le bandeau de consentement réserve sa place : il ne passe plus par-dessus une carte,
+   un filtre ou une commande de cuisson. */
+body.consent-ouvert{padding-bottom:calc(var(--consentH, 150px) + 24px)}
+.wfree{margin:10px 0 2px;font-size:12.5px;line-height:1.45;color:var(--muted);text-align:center}
+.toastact{margin-left:14px;background:none;border:0;color:#D9BC8C;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:0}
 
 #toast{position:fixed;left:50%;bottom:calc(var(--navH) + 18px);transform:translateX(-50%);z-index:95;background:var(--greenDeep);color:#F3F1EB;
   padding:13px 20px;border-radius:999px;font-size:14px;font-weight:600;box-shadow:var(--shadow);opacity:0;transition:.22s;max-width:90vw;text-align:center}
@@ -764,7 +769,7 @@ img{max-width:100%}
   <div class="dhead">
     <button class="iconbtn" id="detailBack" aria-label="Retour"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#i-back"/></svg></button>
     <span class="title" id="detailTitle"></span>
-    <button class="iconbtn" id="detailFav" aria-label="Favori"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-heart"/></svg></button>
+    <button class="iconbtn" id="detailFav" aria-label="Enregistrer en favori" title="Enregistrer en favori"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-heart"/></svg></button>
   </div>
   <div class="dscroll"><div class="dinner" id="detailBody"></div></div>
 </div>
@@ -802,18 +807,18 @@ img{max-width:100%}
     <div class="wbrand">Ô&nbsp;FORNEAU&nbsp;!</div>
     <div class="wsub">Par Maison Forneau</div>
     <h1 class="wtitle">Quoi cuisiner ce soir&nbsp;?</h1>
-    <p class="wlead">Les meilleures recettes virales des réseaux, réunies et réécrites — filtrées selon votre régime, vos appareils et votre temps.</p>
-    <ul class="wfeat">
-      <li>Favoris, frigo et liste de courses synchronisés</li>
-      <li>Programme nutritionnel sur mesure</li>
-      <li>Avis, notes et photos de la communauté</li>
-    </ul>
+    <p class="wlead">Trouvez une idée pour ce soir selon vos ingrédients, votre temps et votre équipement.</p>
+    <!-- L'entrée directe passe en premier. L'ancien ordre — deux boutons de compte, puis le
+         lien invité tout en bas — laissait croire à une inscription obligatoire : la personne
+         devait franchir un mur avant d'avoir vu une seule recette. Les trois puces mélangeaient
+         gratuit et payant et ont été retirées. -->
     <div class="wcta">
-      <button class="btn" id="wSignup">Créer mon compte</button>
+      <button class="btn" id="wGuest">Trouver une recette</button>
+      <p class="wfree">Sans compte. Les recettes et les filtres sont gratuits.</p>
       <button class="btn ghost" id="wLogin">J'ai déjà un compte</button>
-      <button class="wguest" id="wGuest">Continuer sans compte</button>
+      <button class="wguest" id="wSignup">Créer un compte</button>
     </div>
-    <p class="wdisc">Gratuit. Données hébergées dans l'Union européenne. Vous pourrez créer un compte à tout moment.</p>
+    <p class="wdisc">Données hébergées dans l'Union européenne. Vous pourrez créer un compte à tout moment.</p>
   </div>
 </div>
 <div class="cropbar" id="cropbar" hidden>

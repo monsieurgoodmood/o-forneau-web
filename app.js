@@ -274,7 +274,7 @@ function cardHTML(r){
   const fav=S.favs.has(r.id),prod=PRODUCTS[r.product];
   return `<button class="rcard" data-open="${r.id}" aria-label="${esc(r.title)}">
     <div class="ph">${cov}<img src="${r.img}" alt="${esc(r.title)}" loading="lazy" onerror="this.style.opacity=0"/>
-      <span class="fav" role="button" aria-pressed="${fav}" data-fav="${r.id}" aria-label="Favori">${ic("i-heart",'ic',fav?2.2:1.6)}</span></div>
+      <span class="fav" role="button" tabindex="0" aria-pressed="${fav}" data-fav="${r.id}" aria-label="${fav?"Retirer des favoris":"Enregistrer en favori"}" title="${fav?"Retirer des favoris":"Enregistrer en favori"}">${ic("i-heart",'ic',fav?2.2:1.6)}</span></div>
     <div class="body">
       <span class="leaf">${ic("i-leaf",'ic')}${esc((DIETS[r.diets[0]]||{}).s||"")}</span>
       <h3>${esc(r.title)}</h3>
@@ -770,8 +770,7 @@ function render(){MEcran(S.tab);$$(".navitem,.bottomnav button").forEach(b=>b.se
 document.addEventListener("click",e=>{
   const t=e.target.closest("[data-open],[data-fav],[data-aopt],[data-tab],[data-go],[data-obj],[data-repas],[data-goal],[data-diet],[data-psex],[data-addtag],[data-untag],[data-course],[data-fmode],[data-fcount],[data-ffam],[data-fnutri],[data-msex],[data-macro],[data-sort],[data-meal],[data-own],[data-close],[data-auth],[data-star],[data-report],[data-cdel],[data-repphoto],[data-delphoto],[data-authprompt],[data-photofull],#revSubmit,#wSignup,#wLogin,#wGuest,#sugMore,#cropGo,#cropClose,#acctBtn,#openFilters,#openSort,#scrim,#aNext,#aPrev,#aSkip,#aBack,#catToggle,#catClear,#catClear2,#progGen,#progSave,#detailBack,#detailFav,#qgo");
   if(!t)return;
-  if(t.dataset.fav!==undefined){const id=+t.dataset.fav;S.favs.has(id)?S.favs.delete(id):S.favs.add(id);LS.set("favs",[...S.favs]);
-    t.setAttribute("aria-pressed",S.favs.has(id));t.querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.2:1.6);updateBadges();if(S.favs.has(id))nudgeAccount();e.stopPropagation();return;}
+  if(t.dataset.fav!==undefined){basculerFavori(+t.dataset.fav,t);e.stopPropagation();return;}
   if(t.dataset.open!==undefined){openDetail(+t.dataset.open);return;}
   if(t.dataset.aopt!==undefined){const k=t.dataset.aopt;
     if(k[0]==="t"&&/^\d+$/.test(k.slice(1))){const v=+k.slice(1);S.time=S.time===v?null:v;}
@@ -820,8 +819,7 @@ document.addEventListener("click",e=>{
   if(t.id==="catToggle"){S.catOpen=!S.catOpen;render();return;}
   if(t.id==="catClear"||t.id==="catClear2"){M("filtres_effaces",{avant:filtered().length});S.diets.clear();S.appl.clear();S.time=null;S.avoid.clear();S.meal.clear();S.q="";render();return;}
   if(t.id==="detailBack"){history.back();return;}
-  if(t.id==="detailFav"){const id=curId;S.favs.has(id)?S.favs.delete(id):S.favs.add(id);LS.set("favs",[...S.favs]);
-    t.setAttribute("aria-pressed",S.favs.has(id));t.querySelector("svg").setAttribute("stroke-width",S.favs.has(id)?2.3:1.6);updateBadges();return;}
+  if(t.id==="detailFav"){basculerFavori(curId,t);return;}
   if(t.dataset.star!==undefined){const[crit,n]=t.dataset.star.split(":");draftRate[crit]=+n;const grp=t.closest(".stars.ed");if(grp)grp.outerHTML=starsEdit(crit,+n);return;}
   if(t.id==="revSubmit"){submitReview();return;}
   if(t.dataset.report!==undefined){reportComment(t.dataset.report);return;}
@@ -852,7 +850,35 @@ document.addEventListener("keydown",e=>{
   if(e.key==="Enter"&&e.target.closest("#authBody input")){e.preventDefault();const b=$("#authBody").querySelector('[data-auth="signup"],[data-auth="login"],[data-auth="save"]');if(b)b.click();return;}
   if(e.key==="Escape"){if($("#scrim").classList.contains("on"))closeSheets();if($("#detail").classList.contains("on"))history.back();if($("#cook").classList.contains("on"))$("#cookClose").click();}});
 
-let toastT=null;function toast(msg){const el=$("#toast");el.textContent=msg;el.style.opacity="1";clearTimeout(toastT);toastT=setTimeout(()=>el.style.opacity="0",2200);}
+let toastT=null;
+function toast(msg,action){const el=$("#toast");el.textContent="";
+  el.appendChild(document.createTextNode(msg));
+  if(action){const b=document.createElement("button");b.type="button";b.className="toastact";b.textContent=action.libelle;
+    b.addEventListener("click",()=>{el.style.opacity="0";action.faire();},{once:true});el.appendChild(b);}
+  el.style.opacity="1";clearTimeout(toastT);toastT=setTimeout(()=>el.style.opacity="0",action?4200:2200);}
+
+/* Enregistrer une recette doit SE VOIR. Avant, le cœur changeait d'épaisseur de trait et
+   rien d'autre : aucune confirmation, aucun moyen de revenir en arrière. Sur dix-sept
+   comptes, personne n'avait jamais enregistré un favori. On confirme donc l'action, on
+   dit où la recette est gardée, et on laisse annuler. */
+function basculerFavori(id,el){
+  const ajout=!S.favs.has(id);
+  ajout?S.favs.add(id):S.favs.delete(id);
+  LS.set("favs",[...S.favs]);
+  const peindre=(n)=>{const cible=n||el;if(!cible)return;
+    cible.setAttribute("aria-pressed",S.favs.has(id));
+    const sv=cible.querySelector("svg");if(sv)sv.setAttribute("stroke-width",S.favs.has(id)?2.3:1.6);};
+  peindre();
+  document.querySelectorAll('[data-fav="'+id+'"]').forEach(peindre);
+  if($("#detailFav")&&curId===id)peindre($("#detailFav"));
+  updateBadges();
+  if(ajout){
+    toast("Recette enregistrée dans vos favoris.",{libelle:"Annuler",faire:()=>basculerFavori(id,el)});
+    nudgeAccount();
+  } else {
+    toast("Recette retirée de vos favoris.");
+  }
+}
 
 /* ---------- COMPTE CLIENT (Supabase, UE) ---------- */
 const SB=(window.supabase&&window.SB_URL)?window.supabase.createClient(window.SB_URL,window.SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}}):null;
