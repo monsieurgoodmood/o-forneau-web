@@ -924,9 +924,26 @@ function showWelcome(){const w=$("#welcome");if(w){w.hidden=false;document.body.
 function hideWelcome(){const w=$("#welcome");if(w){w.hidden=true;if(!$("#scrim").classList.contains("on")&&!$("#detail").classList.contains("on")&&!$("#cook").classList.contains("on"))document.body.style.overflow="";}}
 function maybeWelcome(){if(S.user)return;try{if(localStorage.getItem("mf_guest"))return;}catch(e){}showWelcome();}
 let nudgeT=null;
+/* L'invitation à créer un compte arrive APRÈS le premier favori, jamais avant : on propose
+   la synchronisation à quelqu'un qui a déjà quelque chose à synchroniser. Deux précautions :
+   la page réserve la hauteur de la barre pour qu'aucune recette ne reste cachée dessous, et
+   l'invitation se retire d'elle-même au bout de douze secondes — une proposition qui ne part
+   plus tant qu'on ne la ferme pas est un piège, pas une proposition. */
+let nudgeAuto=null;
 function nudgeAccount(){if(!SB||S.user)return;try{if(sessionStorage.getItem("mf_nudged"))return;}catch(e){}
-  const b=$("#cropbar");if(!b)return;clearTimeout(nudgeT);nudgeT=setTimeout(()=>{b.hidden=false;requestAnimationFrame(()=>b.classList.add("on"));try{sessionStorage.setItem("mf_nudged","1");}catch(e){}},900);}
-function closeNudge(){const b=$("#cropbar");if(b){b.classList.remove("on");setTimeout(()=>{b.hidden=true;},260);}}
+  const b=$("#cropbar");if(!b)return;clearTimeout(nudgeT);nudgeT=setTimeout(()=>{
+    b.hidden=false;
+    requestAnimationFrame(()=>{
+      b.classList.add("on");
+      document.body.style.setProperty("--nudgeH", b.offsetHeight+"px");
+      document.body.classList.add("nudge-ouvert");
+    });
+    try{sessionStorage.setItem("mf_nudged","1");}catch(e){}
+    clearTimeout(nudgeAuto); nudgeAuto=setTimeout(closeNudge,12000);
+  },900);}
+function closeNudge(){const b=$("#cropbar");clearTimeout(nudgeAuto);
+  document.body.classList.remove("nudge-ouvert");
+  if(b){b.classList.remove("on");setTimeout(()=>{b.hidden=true;},260);}}
 function collectState(){return{favs:[...S.favs],pantry:[...S.pantry],cart:[...S.cart],foyer:S.foyer,prog:S.prog};}
 let cloudT=null;
 function saveCloud(){if(!S.user||!SB)return;clearTimeout(cloudT);cloudT=setTimeout(()=>{
